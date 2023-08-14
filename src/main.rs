@@ -1,3 +1,5 @@
+use colored::Colorize;
+
 #[derive(Debug, Clone)]
 enum Tile {
     Rock,
@@ -8,9 +10,9 @@ enum Tile {
 impl std::fmt::Display for Tile {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Tile::Rock => write!(f, "#"),
-            Tile::Water => write!(f, "o"),
-            Tile::Air => write!(f, "."),
+            Tile::Rock => write!(f, "{}", "#".purple()),
+            Tile::Water => write!(f, "{}", "o".bold().blue()),
+            Tile::Air => write!(f, "{}", ".".bright_black()),
         }
     }
 }
