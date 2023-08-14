@@ -1,6 +1,8 @@
+use std::collections::{BTreeMap, BTreeSet};
+
 use colored::Colorize;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 enum Tile {
     Rock,
     Water,
@@ -59,9 +61,9 @@ impl Board {
                               #.oooo...#\
                               #..o.....#\
                               #........#\
-                              #........#\
-                              #........#\
-                              #........#\
+                              #....o...#\
+                              #...ooo..#\
+                              #....o...#\
                               #........#\
                               #........#\
                               #........#\
@@ -91,7 +93,64 @@ impl std::fmt::Display for Board {
     }
 }
 
+struct BlobDetector<'a> {
+    board: &'a Board,
+    detected: BTreeMap<usize, BTreeSet<(usize, usize)>>,
+}
+
+impl<'a> BlobDetector<'a> {
+    fn new(board: &'a Board) -> Self {
+        Self {
+            board,
+            detected: Default::default(),
+        }
+    }
+
+    fn try_insert_blob(&mut self, x: usize, y: usize, det: &mut BTreeSet<(usize, usize)>) {
+        if self.board.at(x, y) == &Tile::Water && !det.contains(&(x, y)) {
+            det.insert((x, y));
+            self.try_insert_blob(x + 1, y, det);
+            self.try_insert_blob(x - 1, y, det);
+            self.try_insert_blob(x, y + 1, det);
+            self.try_insert_blob(x, y - 1, det);
+        }
+    }
+
+    fn already_detected(&self, x: usize, y: usize) -> bool {
+        self.detected
+            .values()
+            .flatten()
+            .any(|(xx, yy)| xx == &x && yy == &y)
+    }
+
+    fn detect(&mut self) -> &BTreeMap<usize, BTreeSet<(usize, usize)>> {
+        let mut index = 0;
+
+        for y in 0..self.board.height {
+            for x in 0..self.board.width {
+                if !self.already_detected(x, y) {
+                    let mut detected: BTreeSet<(usize, usize)> = Default::default();
+                    self.try_insert_blob(x, y, &mut detected);
+
+                    if !detected.is_empty() {
+                        self.detected.insert(index, detected);
+                        index += 1;
+                    }
+                }
+            }
+        }
+
+        &self.detected
+    }
+}
+
 fn main() {
     let board = Board::new_test_1();
+
+    let mut blob_detector = BlobDetector::new(&board);
+    let blobs = blob_detector.detect();
+
+    dbg!(&blobs);
+
     println!("{board}");
 }
