@@ -23,13 +23,11 @@ impl Tiles {
     fn from_str(s: &str, width: usize) -> Self {
         Self(
             s.chars()
-                .into_iter()
                 .collect::<Vec<_>>()
                 .chunks(width)
-                .into_iter()
                 .map(|chunk| {
                     chunk
-                        .into_iter()
+                        .iter()
                         .map(|c| match c {
                             '#' => Tile::Rock,
                             '.' => Tile::Air,
@@ -85,9 +83,9 @@ impl std::fmt::Display for Board {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for y in 0..self.height {
             for x in 0..self.width {
-                write!(f, "{}", self.at(x, y));
+                write!(f, "{}", self.at(x, y))?;
             }
-            writeln!(f);
+            writeln!(f)?
         }
         Ok(())
     }
