@@ -1,6 +1,6 @@
 use colored::Colorize;
 
-use crate::{board::Board, point::Point, tiles::Tile, Blobs};
+use crate::{blobs::Blobs, board::Board, point::Point, tiles::Tile};
 
 pub(crate) trait HasBoard {
     fn board(&self) -> &Board;

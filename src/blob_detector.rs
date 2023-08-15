@@ -1,4 +1,9 @@
-use crate::{board::Board, point::Point, tiles::Tile, Blob, Blobs};
+use crate::{
+    blobs::{Blob, Blobs},
+    board::Board,
+    point::Point,
+    tiles::Tile,
+};
 
 pub(crate) struct BlobDetector<'a> {
     board: &'a Board,

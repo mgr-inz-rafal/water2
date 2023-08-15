@@ -1,21 +1,16 @@
 mod blob_detector;
+mod blobs;
 mod board;
 mod console_painter;
 mod engine;
 mod point;
 mod tiles;
 
-use std::collections::{BTreeMap, BTreeSet};
-
 use blob_detector::BlobDetector;
 use board::Board;
 
 use console_painter::ConsolePainter;
 use engine::Engine;
-use point::Point;
-
-type Blob = BTreeSet<Point>;
-type Blobs = BTreeMap<usize, Blob>;
 
 fn main() {
     let board = Board::new_test_1();

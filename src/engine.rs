@@ -1,4 +1,9 @@
-use crate::{blob_detector::BlobDetector, board::Board, point::Point, Blobs, console_painter::{HasBlobs, HasBoard, Paintable}};
+use crate::{
+    blob_detector::BlobDetector,
+    board::Board,
+    console_painter::{HasBlobs, HasBoard, Paintable},
+    point::Point, blobs::Blobs,
+};
 
 pub(crate) struct Engine {
     board: Board,
