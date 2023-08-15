@@ -85,25 +85,6 @@ fn blob_index_from_point(x: usize, y: usize, blobs: &Blobs) -> Option<usize> {
     None
 }
 
-fn draw_board(board: &Board, blobs: &Blobs) {
-    for y in 0..board.height {
-        for x in 0..board.width {
-            if let Some(blob_index) = blob_index_from_point(x, y, blobs) {
-                let (r, g, b) = COLORS[blob_index];
-                print!("{}", "o".truecolor(r, g, b))
-            } else {
-                let c = board.at(x, y);
-                match c {
-                    Tile::Rock => print!("{}", "#".purple()),
-                    Tile::Water => print!("{}", ",".white()),
-                    Tile::Air => print!("{}", ".".bright_black()),
-                }
-            }
-        }
-        println!()
-    }
-}
-
 struct BlobDetector<'a> {
     board: &'a Board,
 }
@@ -153,11 +134,87 @@ impl<'a> BlobDetector<'a> {
     }
 }
 
+struct Engine {
+    board: Board,
+    blobs: Blobs,
+}
+
+impl Engine {
+    fn new(board: Board, blobs: Blobs) -> Self {
+        Self { board, blobs }
+    }
+
+    fn board(&self) -> &Board {
+        &self.board
+    }
+
+    fn blobs(&self) -> &Blobs {
+        &self.blobs
+    }
+
+    fn tick(&mut self) {}
+}
+
+impl HasBlobs for Engine {
+    fn blobs(&self) -> &Blobs {
+        self.blobs()
+    }
+}
+
+impl HasBoard for Engine {
+    fn board(&self) -> &Board {
+        self.board()
+    }
+}
+
+impl Paintable for Engine {}
+
+trait HasBoard {
+    fn board(&self) -> &Board;
+}
+
+trait HasBlobs {
+    fn blobs(&self) -> &Blobs;
+}
+
+trait Paintable: HasBlobs + HasBoard {}
+
+struct ConsolePainter {}
+
+impl ConsolePainter {
+    fn paint<T: Paintable>(playfield: &T) {
+        for y in 0..playfield.board().height {
+            for x in 0..playfield.board().width {
+                if let Some(blob_index) = blob_index_from_point(x, y, playfield.blobs()) {
+                    let (r, g, b) = COLORS[blob_index];
+                    print!("{}", "o".truecolor(r, g, b))
+                } else {
+                    let c = playfield.board().at(x, y);
+                    match c {
+                        Tile::Rock => print!("{}", "#".purple()),
+                        Tile::Water => print!("{}", ",".white()),
+                        Tile::Air => print!("{}", ".".bright_black()),
+                    }
+                }
+            }
+            println!()
+        }
+    }
+}
+
 fn main() {
     let board = Board::new_test_1();
 
     let blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect();
 
-    draw_board(&board, &blobs);
+    let mut engine = Engine::new(board, blobs);
+
+    loop {
+        ConsolePainter::paint(&engine);
+        engine.tick();
+
+        let mut line = String::new();
+        std::io::stdin().read_line(&mut line).unwrap();
+    }
 }
