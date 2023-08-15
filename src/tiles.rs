@@ -13,6 +13,7 @@ impl Tile {
     }
 }
 
+#[derive(Debug)]
 pub(crate) struct Tiles(Vec<Vec<Tile>>);
 
 impl Tiles {

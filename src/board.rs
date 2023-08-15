@@ -1,5 +1,6 @@
 use crate::tiles::Tiles;
 
+#[derive(Debug)]
 pub(crate) struct Board {
     width: usize,
     height: usize,
@@ -11,7 +12,7 @@ impl Board {
         let source = self.tiles.at(x1, y1).clone();
         let target = self.tiles.at(x2, y2).clone();
         self.tiles.set_at(x1, y1, target);
-        self.tiles.set_at(x2, y2, source);
+        self.tiles.set_at(x2, y2, source.clone());
     }
 
     pub(crate) fn tiles(&self) -> &Tiles {
@@ -29,19 +30,19 @@ impl Board {
     pub(crate) fn new_test_1() -> Self {
         const WIDTH: usize = 10;
         const TEST_1: &str = "##########\
-                              #.oo.o...#\
-                              #.oooo...#\
-                              #..o.....#\
-                              #........#\
-                              #....o...#\
-                              #...ooo..#\
-                              #....o...#\
-                              #........#\
-                              #........#\
-                              #........#\
-                              #........#\
-                              #........#\
-                              #........#\
+                              #oooo..#.#\
+                              #oooo#o#.#\
+                              #ooo.#ooo#\
+                              ##########\
+                              #oooooooo#\
+                              #oooooooo#\
+                              #oooooooo#\
+                              #oo#######\
+                              #oo#.###.#\
+                              #oo#.#...#\
+                              #oo#.#.#.#\
+                              #oo#...#.#\
+                              #..#####.#\
                               #........#\
                               ##########";
 

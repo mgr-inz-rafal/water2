@@ -12,7 +12,20 @@ pub(crate) trait HasBlobs {
 
 pub(crate) trait Paintable: HasBlobs + HasBoard {}
 
-const COLORS: &[(u8, u8, u8)] = &[(255, 0, 0), (0, 255, 0), (0, 0, 255)];
+const COLORS: &[(u8, u8, u8)] = &[
+    (255, 0, 0),
+    (0, 255, 0),
+    (0, 0, 255),
+    (255, 255, 0),
+    (255, 0, 255),
+    (0, 255, 255),
+    (128, 0, 0),
+    (0, 128, 0),
+    (0, 0, 128),
+    (128, 128, 0),
+    (128, 0, 128),
+    (0, 128, 128),
+];
 
 pub(crate) struct ConsolePainter {}
 
@@ -26,7 +39,7 @@ impl ConsolePainter {
                 } else {
                     let c = playfield.board().tiles().at(x, y);
                     match c {
-                        Tile::Rock => print!("{}", "#".purple()),
+                        Tile::Rock => print!("{}", "#".black().on_white()),
                         Tile::Water => print!("{}", ",".white()),
                         Tile::Air => print!("{}", ".".bright_black()),
                     }
