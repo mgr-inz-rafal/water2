@@ -5,13 +5,18 @@ use std::{
 
 use colored::Colorize;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Point((usize, usize));
 
 impl Point {
+    fn new(x: usize, y: usize) -> Self {
+        Self((x, y))
+    }
+
     fn x(&self) -> usize {
         self.inner().0
     }
+
     fn y(&self) -> usize {
         self.inner().1
     }
@@ -29,6 +34,12 @@ enum Tile {
     Rock,
     Water,
     Air,
+}
+
+impl Tile {
+    fn is_air(&self) -> bool {
+        self == &Tile::Air
+    }
 }
 
 impl Ord for Point {
@@ -90,6 +101,17 @@ struct Board {
 impl Board {
     fn at(&self, x: usize, y: usize) -> &Tile {
         self.tiles.0.get(y).unwrap().get(x).unwrap()
+    }
+
+    fn set_at(&mut self, x: usize, y: usize, tile: Tile) {
+        *self.tiles.0.get_mut(y).unwrap().get_mut(x).unwrap() = tile;
+    }
+
+    fn swap(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
+        let source = self.at(x1, y1).clone();
+        let target = self.at(x2, y2).clone();
+        self.set_at(x1, y1, target);
+        self.set_at(x2, y2, source);
     }
 
     fn new_test_1() -> Self {
@@ -195,10 +217,22 @@ impl Engine {
         &self.blobs
     }
 
-    fn tick(&mut self) {
-        for (_, points) in self.blobs() {
-            for pt in points {}
+    fn tick(self) -> Engine {
+        let Engine { mut board, blobs } = self;
+
+        for (_, points) in blobs {
+            for pt in points.iter().rev() {
+                let dest_pt = Point::new(pt.x(), pt.y() + 1);
+                if board.at(dest_pt.x(), dest_pt.y()).is_air() {
+                    board.swap(pt.x(), pt.y(), pt.x(), pt.y() + 1);
+                }
+            }
         }
+
+        let blob_detector = BlobDetector::new(&board);
+        let blobs = blob_detector.detect();
+
+        Engine { board, blobs }
     }
 }
 
@@ -255,13 +289,11 @@ fn main() {
     let blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect();
 
-    dbg!(&blobs);
-
     let mut engine = Engine::new(board, blobs);
 
     loop {
         ConsolePainter::paint(&engine);
-        engine.tick();
+        engine = engine.tick();
 
         let mut line = String::new();
         std::io::stdin().read_line(&mut line).unwrap();
