@@ -12,15 +12,7 @@ enum Tile {
     Air,
 }
 
-impl std::fmt::Display for Tile {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Tile::Rock => write!(f, "{}", "#".purple()),
-            Tile::Water => write!(f, "{}", "o".bold().blue()),
-            Tile::Air => write!(f, "{}", ".".bright_black()),
-        }
-    }
-}
+const COLORS: &[(u8, u8, u8)] = &[(255, 0, 0), (0, 255, 0), (0, 0, 255)];
 
 struct Tiles(Vec<Vec<Tile>>);
 
@@ -84,15 +76,31 @@ impl Board {
     }
 }
 
-impl std::fmt::Display for Board {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        for y in 0..self.height {
-            for x in 0..self.width {
-                write!(f, "{}", self.at(x, y))?;
-            }
-            writeln!(f)?
+fn blob_index_from_point(x: usize, y: usize, blobs: &Blobs) -> Option<usize> {
+    for (index, points) in blobs {
+        if points.contains(&(x, y)) {
+            return Some(*index);
         }
-        Ok(())
+    }
+    None
+}
+
+fn draw_board(board: &Board, blobs: &Blobs) {
+    for y in 0..board.height {
+        for x in 0..board.width {
+            if let Some(blob_index) = blob_index_from_point(x, y, blobs) {
+                let (r, g, b) = COLORS[blob_index];
+                print!("{}", "o".truecolor(r, g, b))
+            } else {
+                let c = board.at(x, y);
+                match c {
+                    Tile::Rock => print!("{}", "#".purple()),
+                    Tile::Water => print!("{}", ",".white()),
+                    Tile::Air => print!("{}", ".".bright_black()),
+                }
+            }
+        }
+        println!()
     }
 }
 
@@ -149,7 +157,7 @@ fn main() {
     let board = Board::new_test_1();
 
     let blob_detector = BlobDetector::new(&board);
-    let _blobs = blob_detector.detect();
+    let blobs = blob_detector.detect();
 
-    println!("{board}");
+    draw_board(&board, &blobs);
 }
