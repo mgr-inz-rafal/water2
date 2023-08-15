@@ -1,58 +1,19 @@
+mod board;
 mod point;
 mod tiles;
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use board::Board;
 use colored::Colorize;
 
 use point::Point;
-use tiles::{Tile, Tiles};
+use tiles::Tile;
 
 type Blob = BTreeSet<Point>;
 type Blobs = BTreeMap<usize, Blob>;
 
 const COLORS: &[(u8, u8, u8)] = &[(255, 0, 0), (0, 255, 0), (0, 0, 255)];
-
-struct Board {
-    width: usize,
-    height: usize,
-    tiles: Tiles,
-}
-
-impl Board {
-    fn swap(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
-        let source = self.tiles.at(x1, y1).clone();
-        let target = self.tiles.at(x2, y2).clone();
-        self.tiles.set_at(x1, y1, target);
-        self.tiles.set_at(x2, y2, source);
-    }
-
-    fn new_test_1() -> Self {
-        const WIDTH: usize = 10;
-        const TEST_1: &str = "##########\
-                              #.oo.o...#\
-                              #.oooo...#\
-                              #..o.....#\
-                              #........#\
-                              #....o...#\
-                              #...ooo..#\
-                              #....o...#\
-                              #........#\
-                              #........#\
-                              #........#\
-                              #........#\
-                              #........#\
-                              #........#\
-                              #........#\
-                              ##########";
-
-        Self {
-            width: WIDTH,
-            height: 16,
-            tiles: Tiles::from_str(TEST_1, WIDTH),
-        }
-    }
-}
 
 fn blob_index_from_point(x: usize, y: usize, blobs: &Blobs) -> Option<usize> {
     for (index, points) in blobs {
@@ -73,7 +34,7 @@ impl<'a> BlobDetector<'a> {
     }
 
     fn try_insert_blob(&self, x: usize, y: usize, current_blob_points: &mut Blob) {
-        if self.board.tiles.at(x, y) == &Tile::Water
+        if self.board.tiles().at(x, y) == &Tile::Water
             && !current_blob_points.contains(&Point::new(x, y))
         {
             current_blob_points.insert(Point::new(x, y));
@@ -94,8 +55,8 @@ impl<'a> BlobDetector<'a> {
     fn detect(&self) -> Blobs {
         let mut detected: Blobs = Default::default();
 
-        for y in 0..self.board.height {
-            for x in 0..self.board.width {
+        for y in 0..self.board.height() {
+            for x in 0..self.board.width() {
                 if !self.already_detected(x, y, &detected) {
                     let mut current_blob_points: Blob = Default::default();
                     self.try_insert_blob(x, y, &mut current_blob_points);
@@ -138,7 +99,7 @@ impl Engine {
         for (_, points) in blobs {
             for pt in points.iter().rev() {
                 let dest_pt = Point::new(pt.x(), pt.y() + 1);
-                if board.tiles.at(dest_pt.x(), dest_pt.y()).is_air() {
+                if board.tiles().at(dest_pt.x(), dest_pt.y()).is_air() {
                     board.swap(pt.x(), pt.y(), pt.x(), pt.y() + 1);
                 }
             }
@@ -179,13 +140,13 @@ struct ConsolePainter {}
 
 impl ConsolePainter {
     fn paint<T: Paintable>(playfield: &T) {
-        for y in 0..playfield.board().height {
-            for x in 0..playfield.board().width {
+        for y in 0..playfield.board().height() {
+            for x in 0..playfield.board().width() {
                 if let Some(blob_index) = blob_index_from_point(x, y, playfield.blobs()) {
                     let (r, g, b) = COLORS[blob_index];
                     print!("{}", "o".truecolor(r, g, b))
                 } else {
-                    let c = playfield.board().tiles.at(x, y);
+                    let c = playfield.board().tiles().at(x, y);
                     match c {
                         Tile::Rock => print!("{}", "#".purple()),
                         Tile::Water => print!("{}", ",".white()),
