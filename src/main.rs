@@ -1,30 +1,9 @@
-use std::{
-    cmp::Ordering,
-    collections::{BTreeMap, BTreeSet},
-};
+mod point;
+
+use std::collections::{BTreeMap, BTreeSet};
 
 use colored::Colorize;
-
-#[derive(Clone, Debug)]
-struct Point((usize, usize));
-
-impl Point {
-    fn new(x: usize, y: usize) -> Self {
-        Self((x, y))
-    }
-
-    fn x(&self) -> usize {
-        self.inner().0
-    }
-
-    fn y(&self) -> usize {
-        self.inner().1
-    }
-
-    fn inner(&self) -> &(usize, usize) {
-        &self.0
-    }
-}
+use point::Point;
 
 type Blob = BTreeSet<Point>;
 type Blobs = BTreeMap<usize, Blob>;
@@ -41,30 +20,6 @@ impl Tile {
         self == &Tile::Air
     }
 }
-
-impl Ord for Point {
-    fn cmp(&self, other: &Self) -> Ordering {
-        match (self.x().cmp(&other.x()), self.y().cmp(&other.y())) {
-            (Ordering::Equal, Ordering::Equal) => Ordering::Equal,
-            (Ordering::Less, Ordering::Equal) | (_, Ordering::Less) => Ordering::Less,
-            (Ordering::Greater, Ordering::Equal) | (_, Ordering::Greater) => Ordering::Greater,
-        }
-    }
-}
-
-impl PartialOrd for Point {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
-    }
-}
-
-impl PartialEq for Point {
-    fn eq(&self, other: &Self) -> bool {
-        self.0 == other.0
-    }
-}
-
-impl Eq for Point {}
 
 const COLORS: &[(u8, u8, u8)] = &[(255, 0, 0), (0, 255, 0), (0, 0, 255)];
 
@@ -143,7 +98,7 @@ impl Board {
 
 fn blob_index_from_point(x: usize, y: usize, blobs: &Blobs) -> Option<usize> {
     for (index, points) in blobs {
-        if points.contains(&Point((x, y))) {
+        if points.contains(&Point::new(x, y)) {
             return Some(*index);
         }
     }
@@ -160,8 +115,8 @@ impl<'a> BlobDetector<'a> {
     }
 
     fn try_insert_blob(&self, x: usize, y: usize, current_blob_points: &mut Blob) {
-        if self.board.at(x, y) == &Tile::Water && !current_blob_points.contains(&Point((x, y))) {
-            current_blob_points.insert(Point((x, y)));
+        if self.board.at(x, y) == &Tile::Water && !current_blob_points.contains(&Point::new(x, y)) {
+            current_blob_points.insert(Point::new(x, y));
             self.try_insert_blob(x + 1, y, current_blob_points);
             self.try_insert_blob(x - 1, y, current_blob_points);
             self.try_insert_blob(x, y + 1, current_blob_points);
@@ -173,7 +128,7 @@ impl<'a> BlobDetector<'a> {
         detected
             .values()
             .flatten()
-            .any(|Point((xx, yy))| xx == &x && yy == &y) // TODO: Use eq here
+            .any(|pt| pt == &Point::new(x, y))
     }
 
     fn detect(&self) -> Blobs {
