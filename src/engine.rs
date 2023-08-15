@@ -1,8 +1,9 @@
 use crate::{
     blob_detector::BlobDetector,
+    blobs::Blobs,
     board::Board,
     console_painter::{HasBlobs, HasBoard, Paintable},
-    point::Point, blobs::Blobs,
+    point::Point,
 };
 
 pub(crate) struct Engine {
