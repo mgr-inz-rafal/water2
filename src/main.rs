@@ -1,5 +1,6 @@
 mod blob_detector;
 mod board;
+mod engine;
 mod point;
 mod tiles;
 
@@ -9,6 +10,7 @@ use blob_detector::BlobDetector;
 use board::Board;
 use colored::Colorize;
 
+use engine::Engine;
 use point::Point;
 use tiles::Tile;
 
@@ -25,57 +27,6 @@ fn blob_index_from_point(x: usize, y: usize, blobs: &Blobs) -> Option<usize> {
     }
     None
 }
-
-struct Engine {
-    board: Board,
-    blobs: Blobs,
-}
-
-impl Engine {
-    fn new(board: Board, blobs: Blobs) -> Self {
-        Self { board, blobs }
-    }
-
-    fn board(&self) -> &Board {
-        &self.board
-    }
-
-    fn blobs(&self) -> &Blobs {
-        &self.blobs
-    }
-
-    fn tick(self) -> Engine {
-        let Engine { mut board, blobs } = self;
-
-        for (_, points) in blobs {
-            for pt in points.iter().rev() {
-                let dest_pt = Point::new(pt.x(), pt.y() + 1);
-                if board.tiles().at(dest_pt.x(), dest_pt.y()).is_air() {
-                    board.swap(pt.x(), pt.y(), pt.x(), pt.y() + 1);
-                }
-            }
-        }
-
-        let blob_detector = BlobDetector::new(&board);
-        let blobs = blob_detector.detect();
-
-        Engine { board, blobs }
-    }
-}
-
-impl HasBlobs for Engine {
-    fn blobs(&self) -> &Blobs {
-        self.blobs()
-    }
-}
-
-impl HasBoard for Engine {
-    fn board(&self) -> &Board {
-        self.board()
-    }
-}
-
-impl Paintable for Engine {}
 
 trait HasBoard {
     fn board(&self) -> &Board;
