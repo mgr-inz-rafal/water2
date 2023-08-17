@@ -1,6 +1,7 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
-    thread::Thread, time::Instant,
+    thread::Thread,
+    time::Instant,
 };
 
 use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
@@ -102,7 +103,9 @@ impl Engine {
             new_blobs.insert(index, (new_points, did_move_down));
 
             for (_, (points, did_move_down)) in new_blobs.iter() {
-                if /* !did_move_down */ true {
+                if
+                /* !did_move_down */
+                true {
                     // No single droplet from this blob moved down, try move up.
                     let top_row = points.first().unwrap().y();
                     let top_points: Vec<_> = points.iter().filter(|pt| pt.y() == top_row).collect();
@@ -144,8 +147,8 @@ impl Engine {
 
         // TODO: It's super inefficient to re-detect blobs each tick.
         // Split and merge blobs as they move.
-        let blob_detector = BlobDetector::new(&board);
-        let blobs = blob_detector.detect();
+        let mut blob_detector = BlobDetector::new(&board);
+        let blobs = blob_detector.detect_quick();
 
         Engine { board, blobs, rng }
     }

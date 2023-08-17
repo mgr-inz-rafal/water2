@@ -74,7 +74,7 @@ impl<'a> BlobDetector<'a> {
             .any(|pt| pt == &Point::new(x, y))
     }
 
-    pub(crate) fn detect(&self) -> Blobs {
+    pub(crate) fn detect_slow(&self) -> Blobs {
         let start = Instant::now();
         let mut detected: Blobs = Default::default();
 
@@ -103,7 +103,7 @@ impl<'a> BlobDetector<'a> {
             }
         }
         let duration = start.elapsed();
-        println!("BD: {duration:?}");
+        println!("BD (slow): {duration:?}");
 
         detected
     }
@@ -142,7 +142,6 @@ impl<'a> BlobDetector<'a> {
                     break;
                 } else {
                     last_x = Some(x);
-                    println!("to right x={x}");
                     self.done.push((x, sy));
 
                     if self.board.tiles().at(x, sy - 1) == &Tile::Water {
@@ -161,7 +160,6 @@ impl<'a> BlobDetector<'a> {
 
             // Find to the left
             for x in (0..start).rev() {
-                println!("to left x={x}");
                 if self.board.tiles().at(x, sy) != &Tile::Water {
                     return Some(DetectedLineDef {
                         start: x + 1,
@@ -189,10 +187,11 @@ impl<'a> BlobDetector<'a> {
         None
     }
 
-    fn find_first_water_point(&self) -> Option<(usize, usize)> {
+    fn find_first_water_point(&mut self) -> Option<(usize, usize)> {
         for y in 0..self.board.height() {
             for x in 0..self.board.width() {
-                if self.board.tiles().at(x, y) == &Tile::Water {
+                if !self.done.contains(&(x, y)) && self.board.tiles().at(x, y) == &Tile::Water {
+                    self.done.push((x, y));
                     return Some((x, y));
                 }
             }
@@ -202,30 +201,16 @@ impl<'a> BlobDetector<'a> {
 
     // TODO: no mut, hold the `done` as function local variable
     pub(crate) fn detect_quick(&mut self) -> Blobs {
-        let first_point = self.find_first_water_point();
-        let mut to_be_analyzed: VecDeque<_> = Default::default();
-        let mut blob: Blob = Default::default();
-        if let Some((x, y)) = first_point {
-            let detected_line = self.find_line(x, y);
-            dbg!(&detected_line);
-            if let Some(detected_line) = detected_line {
-                for b in detected_line.start..=detected_line.end {
-                    blob.insert(Point::new(b, y));
-                }
-                to_be_analyzed.extend(detected_line.touching);
-            }
-        }
-
+        let start = Instant::now();
+        let mut index = 0;
+        let mut blobs: Blobs = Default::default();
         loop {
-            let tba = to_be_analyzed.pop_front();
-            if let Some((x, y)) = tba {
-                if self.done.contains(&(x, y)) {
-                    continue;
-                }
-                println!("now checking {x},{y}");
+            let first_point = self.find_first_water_point();
+            let mut to_be_analyzed: VecDeque<_> = Default::default();
+            let mut blob: Blob = Default::default();
+            if let Some((x, y)) = first_point {
                 let detected_line = self.find_line(x, y);
                 if let Some(detected_line) = detected_line {
-                    dbg!(&detected_line);
                     for b in detected_line.start..=detected_line.end {
                         blob.insert(Point::new(b, y));
                     }
@@ -234,10 +219,31 @@ impl<'a> BlobDetector<'a> {
             } else {
                 break;
             }
+
+            loop {
+                let tba = to_be_analyzed.pop_front();
+                if let Some((x, y)) = tba {
+                    if self.done.contains(&(x, y)) {
+                        continue;
+                    }
+                    let detected_line = self.find_line(x, y);
+                    if let Some(detected_line) = detected_line {
+                        for b in detected_line.start..=detected_line.end {
+                            blob.insert(Point::new(b, y));
+                        }
+                        to_be_analyzed.extend(detected_line.touching);
+                    }
+                } else {
+                    break;
+                }
+            }
+
+            blobs.insert(index, blob);
+            index += 1;
         }
 
-        let mut blobs: Blobs = Default::default();
-        blobs.insert(0, blob);
+        let duration = start.elapsed();
+        println!("BD (fast): {duration:?}");
 
         blobs
     }
@@ -254,8 +260,8 @@ mod tests {
                              #o####o#oo##\
                              #oo##oo#o###\
                              #oo##oo###o#\
-                             #oooooooooo#\
-                             #o#oooooooo#\
+                             #ooooooo#oo#\
+                             #o#ooooo#oo#\
                              #oooo#o##oo#\
                              #oooo#o##oo#\
                              #o#o#oo##oo#\
@@ -263,6 +269,13 @@ mod tests {
         let board = Board::new_from_str(12, 11, TILES);
         let mut detector = BlobDetector::new(&board);
         let blobs = detector.detect_quick();
+
+        dbg!(&blobs.len());
+
+        let blobs_slow = detector.detect_slow();
+        dbg!(&blobs_slow.len());
+
+        assert_eq!(blobs, blobs_slow);
 
         let (_, pts) = blobs.into_iter().next().unwrap();
 
@@ -284,7 +297,7 @@ mod tests {
             println!();
         });
 
-        let result_str: String = result.iter().collect();
-        assert_eq!(result_str, TILES);
+        // let result_str: String = result.iter().collect();
+        // assert_eq!(result_str, TILES);
     }
 }

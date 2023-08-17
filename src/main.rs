@@ -71,8 +71,8 @@ fn main() {
 
     let mut board = Board::from_image(format!("{}/{}", manifest_dir, "resources/woter.png"));
 
-    let blob_detector = BlobDetector::new(&board);
-    let blobs = blob_detector.detect();
+    let mut blob_detector = BlobDetector::new(&board);
+    let blobs = blob_detector.detect_quick();
 
     let mut engine = Engine::new(board, blobs);
 
