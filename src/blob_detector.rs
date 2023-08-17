@@ -1,4 +1,7 @@
-use std::{collections::BTreeSet, time::Instant};
+use std::{
+    collections::{BTreeSet, VecDeque},
+    time::Instant,
+};
 
 use crate::{
     blobs::{Blob, Blobs},
@@ -9,11 +12,35 @@ use crate::{
 
 pub(crate) struct BlobDetector<'a> {
     board: &'a Board,
+    done: Vec<(usize, usize)>,
+}
+
+// TODO: Experiment with BTreeSets for potentially better lookup.
+// When using Point instead of tuple (x,y), points should be sorted correctly (top row first)
+
+#[derive(Debug)]
+struct DetectedLineDef {
+    start: usize,
+    end: usize,
+    touching: Vec<(usize, usize)>,
+}
+
+impl DetectedLineDef {
+    fn new(start: usize, end: usize, touching: Vec<(usize, usize)>) -> Self {
+        Self {
+            start,
+            end,
+            touching,
+        }
+    }
 }
 
 impl<'a> BlobDetector<'a> {
     pub(crate) fn new(board: &'a Board) -> Self {
-        Self { board }
+        Self {
+            board,
+            done: Default::default(),
+        }
     }
 
     fn try_insert_blob(
@@ -81,31 +108,138 @@ impl<'a> BlobDetector<'a> {
         detected
     }
 
-    fn find_line(&self, row: usize) -> Option<(usize, usize)> {
+    fn find_line(&mut self, sx: usize, sy: usize) -> Option<DetectedLineDef> {
         let mut start = None;
-        for x in 0..self.board.width() {
-            if self.board.tiles().at(x, row) == &Tile::Water {
+        let mut touching = Vec::new();
+
+        // TODO: This loop is probably not needed most of the time, since sx and sy point to the water
+        for x in sx..self.board.width() {
+            if self.board.tiles().at(x, sy) == &Tile::Water {
                 start = Some(x);
+                self.done.push((x, sy));
+
+                if self.board.tiles().at(x, sy - 1) == &Tile::Water {
+                    if !self.done.contains(&(x, sy - 1)) {
+                        touching.push((x, sy - 1));
+                    }
+                }
+
+                if self.board.tiles().at(x, sy + 1) == &Tile::Water {
+                    if !self.done.contains(&(x, sy + 1)) {
+                        touching.push((x, sy + 1));
+                    }
+                }
+
                 break;
             }
         }
+
         if let Some(start) = start {
+            let mut last_x = None;
+            // Find to the right
             for x in start + 1..self.board.width() {
-                if self.board.tiles().at(x, row) != &Tile::Water {
-                    return Some((start, x - 1));
+                if self.board.tiles().at(x, sy) != &Tile::Water {
+                    break;
+                } else {
+                    last_x = Some(x);
+                    println!("to right x={x}");
+                    self.done.push((x, sy));
+
+                    if self.board.tiles().at(x, sy - 1) == &Tile::Water {
+                        if !self.done.contains(&(x, sy - 1)) {
+                            touching.push((x, sy - 1));
+                        }
+                    }
+
+                    if self.board.tiles().at(x, sy + 1) == &Tile::Water {
+                        if !self.done.contains(&(x, sy + 1)) {
+                            touching.push((x, sy + 1));
+                        }
+                    }
+                }
+            }
+
+            // Find to the left
+            for x in (0..start).rev() {
+                println!("to left x={x}");
+                if self.board.tiles().at(x, sy) != &Tile::Water {
+                    return Some(DetectedLineDef {
+                        start: x + 1,
+                        end: last_x.unwrap_or(sx),
+                        touching,
+                    });
+                } else {
+                    self.done.push((x, sy));
+
+                    if self.board.tiles().at(x, sy - 1) == &Tile::Water {
+                        if !self.done.contains(&(x, sy - 1)) {
+                            touching.push((x, sy - 1));
+                        }
+                    }
+
+                    if self.board.tiles().at(x, sy + 1) == &Tile::Water {
+                        if !self.done.contains(&(x, sy + 1)) {
+                            touching.push((x, sy + 1));
+                        }
+                    }
+                }
+            }
+        }
+
+        None
+    }
+
+    fn find_first_water_point(&self) -> Option<(usize, usize)> {
+        for y in 0..self.board.height() {
+            for x in 0..self.board.width() {
+                if self.board.tiles().at(x, y) == &Tile::Water {
+                    return Some((x, y));
                 }
             }
         }
         None
     }
 
-    pub(crate) fn detect_quick(&self) -> Blobs {
-        for y in 0..self.board.height() {
-            let line = self.find_line(y);
-            dbg!(&line);
+    // TODO: no mut, hold the `done` as function local variable
+    pub(crate) fn detect_quick(&mut self) -> Blobs {
+        let first_point = self.find_first_water_point();
+        let mut to_be_analyzed: VecDeque<_> = Default::default();
+        let mut blob: Blob = Default::default();
+        if let Some((x, y)) = first_point {
+            let detected_line = self.find_line(x, y);
+            dbg!(&detected_line);
+            if let Some(detected_line) = detected_line {
+                for b in detected_line.start..=detected_line.end {
+                    blob.insert(Point::new(b, y));
+                }
+                to_be_analyzed.extend(detected_line.touching);
+            }
         }
 
-        todo!();
+        loop {
+            let tba = to_be_analyzed.pop_front();
+            if let Some((x, y)) = tba {
+                if self.done.contains(&(x, y)) {
+                    continue;
+                }
+                println!("now checking {x},{y}");
+                let detected_line = self.find_line(x, y);
+                if let Some(detected_line) = detected_line {
+                    dbg!(&detected_line);
+                    for b in detected_line.start..=detected_line.end {
+                        blob.insert(Point::new(b, y));
+                    }
+                    to_be_analyzed.extend(detected_line.touching);
+                }
+            } else {
+                break;
+            }
+        }
+
+        let mut blobs: Blobs = Default::default();
+        blobs.insert(0, blob);
+
+        blobs
     }
 }
 
@@ -116,9 +250,9 @@ mod tests {
     #[test]
     fn detects_blob() {
         const TILES: &str = "############\
-                             #####ooooo##\
-                             #o###ooooo##\
-                             #oo##oo#####\
+                             ####oooooo##\
+                             #o####o#oo##\
+                             #oo##oo#o###\
                              #oo##oo###o#\
                              #oooooooooo#\
                              #o#oooooooo#\
@@ -127,7 +261,7 @@ mod tests {
                              #o#o#oo##oo#\
                              ############";
         let board = Board::new_from_str(12, 11, TILES);
-        let detector = BlobDetector::new(&board);
+        let mut detector = BlobDetector::new(&board);
         let blobs = detector.detect_quick();
 
         let (_, pts) = blobs.into_iter().next().unwrap();
@@ -139,31 +273,18 @@ mod tests {
                 let y = i / 12;
                 let x = i - y * 12;
                 if pts.contains(&Point::new(x, y)) {
-                    'O'
+                    'o'
                 } else {
-                    '.'
+                    '#'
                 }
             })
             .collect();
-        let result_str: String = result.iter().collect();
-        assert_eq!(
-            result_str,
-            "............\
-             ......OOOOO.\
-             .O....OOOOO.\
-             .OO...OO....\
-             .OO...OO..O.\
-             .OOOOOOOOOO.\
-             .O.OOOOOOOO.\
-             .OOOO.O..OO.\
-             .OOOO.O..OO.\
-             .O.O.OO..OO.\
-             ............"
-        );
-
         result.chunks(12).for_each(|chunk| {
             chunk.into_iter().for_each(|c| print!("{c}"));
             println!();
         });
+
+        let result_str: String = result.iter().collect();
+        assert_eq!(result_str, TILES);
     }
 }
