@@ -1,4 +1,4 @@
-use std::collections::BTreeSet;
+use std::{collections::BTreeSet, time::Instant};
 
 use crate::{
     blobs::{Blob, Blobs},
@@ -48,6 +48,7 @@ impl<'a> BlobDetector<'a> {
     }
 
     pub(crate) fn detect(&self) -> Blobs {
+        let start = Instant::now();
         let mut detected: Blobs = Default::default();
 
         for y in 0..self.board.height() {
@@ -70,12 +71,72 @@ impl<'a> BlobDetector<'a> {
                             detected.keys().last().map_or(0, |last_key| last_key + 1),
                             current_blob_points,
                         );
-                        println!("Blob detected with depth: {recursion_counter}");
                     }
                 }
             }
         }
+        let duration = start.elapsed();
+        println!("BD: {duration:?}");
 
         detected
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{blob_detector::BlobDetector, board::Board, point::Point};
+
+    #[test]
+    fn detects_blob() {
+        const TILES: &str = "############\
+                             ######ooooo#\
+                             #o####ooooo#\
+                             #oo###oo####\
+                             #oo###oo##o#\
+                             #oooooooooo#\
+                             #o#oooooooo#\
+                             #oooo#o##oo#\
+                             #oooo#o##oo#\
+                             #o#o#oo##oo#\
+                             ############";
+        let board = Board::new_from_str(12, 11, TILES);
+        let detector = BlobDetector::new(&board);
+        let blobs = detector.detect();
+
+        let (_, pts) = blobs.into_iter().next().unwrap();
+
+        let result: Vec<_> = TILES
+            .chars()
+            .enumerate()
+            .map(|(i, c)| {
+                let y = i / 12;
+                let x = i - y * 12;
+                if pts.contains(&Point::new(x, y)) {
+                    'O'
+                } else {
+                    '.'
+                }
+            })
+            .collect();
+        let result_str: String = result.iter().collect();
+        assert_eq!(
+            result_str,
+            "............\
+             ......OOOOO.\
+             .O....OOOOO.\
+             .OO...OO....\
+             .OO...OO..O.\
+             .OOOOOOOOOO.\
+             .O.OOOOOOOO.\
+             .OOOO.O..OO.\
+             .OOOO.O..OO.\
+             .O.O.OO..OO.\
+             ............"
+        );
+
+        result.chunks(12).for_each(|chunk| {
+            chunk.into_iter().for_each(|c| print!("{c}"));
+            println!();
+        });
     }
 }

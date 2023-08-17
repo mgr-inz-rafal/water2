@@ -1,6 +1,6 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
-    thread::Thread,
+    thread::Thread, time::Instant,
 };
 
 use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
@@ -47,6 +47,7 @@ impl Engine {
         // TODO: Quite ugly and hacky, please revrite.
         let mut new_blobs: BTreeMap<usize, (Blob, bool)> = Default::default();
 
+        let start = Instant::now();
         for (index, mut points) in blobs {
             let mut new_points: BTreeSet<_> = Default::default();
 
@@ -138,6 +139,8 @@ impl Engine {
                 }
             }
         }
+        let duration = start.elapsed();
+        println!("MOVE: {duration:?}");
 
         // TODO: It's super inefficient to re-detect blobs each tick.
         // Split and merge blobs as they move.

@@ -53,8 +53,17 @@ impl Board {
         board
     }
 
+    pub(crate) fn new_from_str(width: usize, height: usize, tiles: &str) -> Self {
+        Self {
+            width,
+            height,
+            tiles: Tiles::from_str(tiles, width),
+        }
+    }
+
     pub(crate) fn new_test_1() -> Self {
         const WIDTH: usize = 10;
+        const HEIGHT: usize = 16;
         const TEST_1: &str = "##########\
                               #oooo..#.#\
                               #oooo#o#.#\
@@ -74,7 +83,7 @@ impl Board {
 
         Self {
             width: WIDTH,
-            height: 16,
+            height: HEIGHT,
             tiles: Tiles::from_str(TEST_1, WIDTH),
         }
     }
