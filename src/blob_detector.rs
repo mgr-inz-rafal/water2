@@ -243,7 +243,6 @@ impl<'a> BlobDetector<'a> {
         }
 
         let duration = start.elapsed();
-        println!("BD (fast): {duration:?}");
 
         blobs
     }

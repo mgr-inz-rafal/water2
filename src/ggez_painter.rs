@@ -13,8 +13,9 @@ pub(crate) struct GgezPainter {}
 
 impl GgezPainter {
     pub(crate) fn paint<T: Paintable>(playfield: &T, ctx: &mut Context) {
-        let mut pixel_buffer: Vec<u8> = Vec::with_capacity(320 * 320);
-        pixel_buffer.resize(320 * 320 * 4, 0);
+        let total_pixels = playfield.board().width() * playfield.board().height();
+        let mut pixel_buffer: Vec<u8> = Vec::with_capacity(total_pixels);
+        pixel_buffer.resize(total_pixels * 4, 0);
 
         let mut canvas = graphics::Canvas::from_frame(ctx, Color::RED);
         let mut index = 0;
@@ -48,8 +49,8 @@ impl GgezPainter {
             ctx,
             &pixel_buffer,
             ImageFormat::Rgba8UnormSrgb,
-            320 as u32,
-            320 as u32,
+            playfield.board().width() as u32,
+            playfield.board().height() as u32,
         );
         canvas.draw(&image, DrawParam::default());
         canvas.finish(ctx).unwrap();
@@ -66,7 +67,7 @@ impl GgezPainter {
 
     pub(crate) fn init() -> (Context, EventLoop<()>) {
         let window_mode = WindowMode::default();
-        let window_mode = window_mode.dimensions(320.0, 320.0);
+        let window_mode = window_mode.dimensions(800.0, 800.0);
         ContextBuilder::new("my_game", "Cool Game Author")
             .window_mode(window_mode)
             .build()

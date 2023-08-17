@@ -34,9 +34,9 @@ impl Board {
         let pixels = image.enumerate_pixels();
 
         let mut board = Self {
-            width: 320,
-            height: 320,
-            tiles: Tiles::empty(320, 320),
+            width: image.width() as usize,
+            height: image.height() as usize,
+            tiles: Tiles::empty(image.width() as usize, image.height() as usize),
         };
 
         for (x, y, rgb) in pixels {

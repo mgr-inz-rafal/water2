@@ -143,7 +143,6 @@ impl Engine {
             }
         }
         let duration = start.elapsed();
-        println!("MOVE: {duration:?}");
 
         // TODO: It's super inefficient to re-detect blobs each tick.
         // Split and merge blobs as they move.
