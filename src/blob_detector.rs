@@ -80,6 +80,33 @@ impl<'a> BlobDetector<'a> {
 
         detected
     }
+
+    fn find_line(&self, row: usize) -> Option<(usize, usize)> {
+        let mut start = None;
+        for x in 0..self.board.width() {
+            if self.board.tiles().at(x, row) == &Tile::Water {
+                start = Some(x);
+                break;
+            }
+        }
+        if let Some(start) = start {
+            for x in start + 1..self.board.width() {
+                if self.board.tiles().at(x, row) != &Tile::Water {
+                    return Some((start, x - 1));
+                }
+            }
+        }
+        None
+    }
+
+    pub(crate) fn detect_quick(&self) -> Blobs {
+        for y in 0..self.board.height() {
+            let line = self.find_line(y);
+            dbg!(&line);
+        }
+
+        todo!();
+    }
 }
 
 #[cfg(test)]
@@ -89,10 +116,10 @@ mod tests {
     #[test]
     fn detects_blob() {
         const TILES: &str = "############\
-                             ######ooooo#\
-                             #o####ooooo#\
-                             #oo###oo####\
-                             #oo###oo##o#\
+                             #####ooooo##\
+                             #o###ooooo##\
+                             #oo##oo#####\
+                             #oo##oo###o#\
                              #oooooooooo#\
                              #o#oooooooo#\
                              #oooo#o##oo#\
@@ -101,7 +128,7 @@ mod tests {
                              ############";
         let board = Board::new_from_str(12, 11, TILES);
         let detector = BlobDetector::new(&board);
-        let blobs = detector.detect();
+        let blobs = detector.detect_quick();
 
         let (_, pts) = blobs.into_iter().next().unwrap();
 
