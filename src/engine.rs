@@ -13,6 +13,7 @@ use crate::{
     point::Point,
 };
 
+#[derive(Clone)]
 pub(crate) struct Engine {
     board: Board,
     blobs: Blobs,
@@ -100,7 +101,7 @@ impl Engine {
             new_blobs.insert(index, (new_points, did_move_down));
 
             for (_, (points, did_move_down)) in new_blobs.iter() {
-                if !did_move_down {
+                if /* !did_move_down */ true {
                     // No single droplet from this blob moved down, try move up.
                     let top_row = points.first().unwrap().y();
                     let top_points: Vec<_> = points.iter().filter(|pt| pt.y() == top_row).collect();

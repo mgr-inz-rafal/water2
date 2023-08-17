@@ -13,7 +13,7 @@ impl Tile {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub(crate) struct Tiles(Vec<Vec<Tile>>);
 
 impl Tiles {
@@ -35,6 +35,11 @@ impl Tiles {
                 })
                 .collect(),
         )
+    }
+
+    pub(crate) fn empty(width: usize, height: usize) -> Self {
+        let row = vec![Tile::Air; width];
+        Self(vec![row; height])
     }
 
     pub(crate) fn at(&self, x: usize, y: usize) -> &Tile {

@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 use crate::{
     blobs::{Blob, Blobs},
     board::Board,
@@ -14,15 +16,27 @@ impl<'a> BlobDetector<'a> {
         Self { board }
     }
 
-    fn try_insert_blob(&self, x: usize, y: usize, current_blob_points: &mut Blob) {
+    fn try_insert_blob(
+        &self,
+        x: usize,
+        y: usize,
+        current_blob_points: &mut Blob,
+        recursion_counter: &mut i32,
+        visited: &mut BTreeSet<(usize, usize)>,
+    ) {
+        if visited.contains(&(x, y)) {
+            return;
+        }
+        *recursion_counter += 1;
         if self.board.tiles().at(x, y) == &Tile::Water
             && !current_blob_points.contains(&Point::new(x, y))
         {
             current_blob_points.insert(Point::new(x, y));
-            self.try_insert_blob(x + 1, y, current_blob_points);
-            self.try_insert_blob(x - 1, y, current_blob_points);
-            self.try_insert_blob(x, y + 1, current_blob_points);
-            self.try_insert_blob(x, y - 1, current_blob_points);
+            visited.insert((x, y));
+            self.try_insert_blob(x + 1, y, current_blob_points, recursion_counter, visited);
+            self.try_insert_blob(x - 1, y, current_blob_points, recursion_counter, visited);
+            self.try_insert_blob(x, y + 1, current_blob_points, recursion_counter, visited);
+            self.try_insert_blob(x, y - 1, current_blob_points, recursion_counter, visited);
         }
     }
 
@@ -40,13 +54,23 @@ impl<'a> BlobDetector<'a> {
             for x in 0..self.board.width() {
                 if !self.already_detected(x, y, &detected) {
                     let mut current_blob_points: Blob = Default::default();
-                    self.try_insert_blob(x, y, &mut current_blob_points);
+
+                    let mut recursion_counter = 0;
+                    let mut visited: BTreeSet<_> = Default::default();
+                    self.try_insert_blob(
+                        x,
+                        y,
+                        &mut current_blob_points,
+                        &mut recursion_counter,
+                        &mut visited,
+                    );
 
                     if !current_blob_points.is_empty() {
                         detected.insert(
                             detected.keys().last().map_or(0, |last_key| last_key + 1),
                             current_blob_points,
                         );
+                        println!("Blob detected with depth: {recursion_counter}");
                     }
                 }
             }
