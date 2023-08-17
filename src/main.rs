@@ -69,7 +69,7 @@ fn main() {
         Err(_) => ".".to_string(),
     };
 
-    let mut board = Board::from_image(format!("{}/{}", manifest_dir, "resources/woter_big.png"));
+    let mut board = Board::from_image(format!("{}/{}", manifest_dir, "resources/woter02.png"));
 
     let mut blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect_quick();
