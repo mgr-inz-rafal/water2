@@ -12,7 +12,7 @@ use crate::{
 
 pub(crate) struct BlobDetector<'a> {
     board: &'a Board,
-    done: Vec<(usize, usize)>,
+    done: BTreeSet<(usize, usize)>,
 }
 
 // TODO: Experiment with BTreeSets for potentially better lookup.
@@ -116,7 +116,7 @@ impl<'a> BlobDetector<'a> {
         for x in sx..self.board.width() {
             if self.board.tiles().at(x, sy) == &Tile::Water {
                 start = Some(x);
-                self.done.push((x, sy));
+                self.done.insert((x, sy));
 
                 if self.board.tiles().at(x, sy - 1) == &Tile::Water {
                     if !self.done.contains(&(x, sy - 1)) {
@@ -142,7 +142,7 @@ impl<'a> BlobDetector<'a> {
                     break;
                 } else {
                     last_x = Some(x);
-                    self.done.push((x, sy));
+                    self.done.insert((x, sy));
 
                     if self.board.tiles().at(x, sy - 1) == &Tile::Water {
                         if !self.done.contains(&(x, sy - 1)) {
@@ -167,7 +167,7 @@ impl<'a> BlobDetector<'a> {
                         touching,
                     });
                 } else {
-                    self.done.push((x, sy));
+                    self.done.insert((x, sy));
 
                     if self.board.tiles().at(x, sy - 1) == &Tile::Water {
                         if !self.done.contains(&(x, sy - 1)) {
@@ -191,7 +191,7 @@ impl<'a> BlobDetector<'a> {
         for y in 0..self.board.height() {
             for x in 0..self.board.width() {
                 if !self.done.contains(&(x, y)) && self.board.tiles().at(x, y) == &Tile::Water {
-                    self.done.push((x, y));
+                    self.done.insert((x, y));
                     return Some((x, y));
                 }
             }
