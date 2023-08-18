@@ -12,13 +12,14 @@ use std::{env, f32::consts::PI};
 use blob_detector::BlobDetector;
 use board::Board;
 
-use console_painter::ConsolePainter;
+use console_painter::{ConsolePainter, HasBoard};
 use engine::Engine;
 use ggez::{
     event::{self, EventHandler},
     Context, GameResult,
 };
 use ggez_painter::GgezPainter;
+use tiles::Tile;
 
 const TITLE: &str = "Przelewaj";
 const AUTHOR: &str = "mgr inż. Rafał";
@@ -52,11 +53,28 @@ const PLAYFIELD_HEIGHT: usize = WINDOW_HEIGHT / PIXEL_SIZE;
 
 struct Whatever {
     engine: Engine,
+
+    // Drawing
+    // TODO: Extract to dedicated struct
+    left_button_down: bool,
+    right_button_down: bool,
+    middle_button_down: bool,
+    tile_to_draw: Tile,
 }
 
 impl Whatever {
     fn new(engine: Engine) -> Self {
-        Self { engine }
+        Self {
+            engine,
+            left_button_down: false,
+            right_button_down: false,
+            middle_button_down: false,
+            tile_to_draw: Tile::Water,
+        }
+    }
+
+    fn tile_to_draw(&self) -> &Tile {
+        &self.tile_to_draw
     }
 }
 
@@ -69,6 +87,56 @@ impl EventHandler for Whatever {
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
         GgezPainter::paint(&self.engine, ctx).unwrap();
+        Ok(())
+    }
+
+    fn mouse_button_down_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: event::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) -> Result<(), ggez::GameError> {
+        match button {
+            event::MouseButton::Left => self.left_button_down = true,
+            event::MouseButton::Right => self.right_button_down = true,
+            event::MouseButton::Middle => self.middle_button_down = true,
+            event::MouseButton::Other(_) => (),
+        }
+        Ok(())
+    }
+
+    fn mouse_button_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        button: event::MouseButton,
+        _x: f32,
+        _y: f32,
+    ) -> Result<(), ggez::GameError> {
+        match button {
+            event::MouseButton::Left => self.left_button_down = false,
+            event::MouseButton::Right => self.right_button_down = false,
+            event::MouseButton::Middle => self.middle_button_down = false,
+            event::MouseButton::Other(_) => (),
+        }
+        Ok(())
+    }
+
+    fn mouse_motion_event(
+        &mut self,
+        _ctx: &mut Context,
+        x: f32,
+        y: f32,
+        _dx: f32,
+        _dy: f32,
+    ) -> Result<(), ggez::GameError> {
+        if self.left_button_down {
+            let engine = &mut self.engine;
+            let board = engine.board_mut();
+            let tiles = board.tiles_mut();
+            tiles.set_at(x as usize / 2, y as usize / 2, self.tile_to_draw);
+        }
+
         Ok(())
     }
 }

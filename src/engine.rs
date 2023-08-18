@@ -34,6 +34,10 @@ impl Engine {
         &self.board
     }
 
+    pub(crate) fn board_mut(&mut self) -> &mut Board {
+        &mut self.board
+    }
+
     fn blobs(&self) -> &Blobs {
         &self.blobs
     }
@@ -45,7 +49,7 @@ impl Engine {
             mut rng,
         } = self;
 
-        // TODO: Quite ugly and hacky, please revrite.
+        // TODO: Quite ugly and hacky, please rewrite.
         let mut new_blobs: BTreeMap<usize, (Blob, bool)> = Default::default();
 
         let start = Instant::now();

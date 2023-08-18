@@ -35,7 +35,7 @@ impl GgezPainter {
                         Rect::new(x as f32 * 2.0, y as f32 * 2.0, 2.0, 2.0),
                         match playfield.board().tiles().at(x, y) {
                             crate::tiles::Tile::Rock => Color::BLACK,
-                            crate::tiles::Tile::Water => Color::CYAN,
+                            crate::tiles::Tile::Water => Color::BLUE,
                             crate::tiles::Tile::Air => Color::WHITE,
                         },
                     )

@@ -39,6 +39,10 @@ impl Board {
         &self.tiles
     }
 
+    pub(crate) fn tiles_mut(&mut self) -> &mut Tiles {
+        &mut self.tiles
+    }
+
     pub(crate) fn width(&self) -> usize {
         self.width
     }

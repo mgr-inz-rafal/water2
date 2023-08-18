@@ -1,6 +1,6 @@
 // TODO: Clean-up unwraps
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub(crate) enum Tile {
     Rock,
     Water,
