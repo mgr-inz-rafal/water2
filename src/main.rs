@@ -127,7 +127,25 @@ impl EventHandler for Whatever {
                     }
                 }
             }
-            event::MouseButton::Right => self.right_button_down = true,
+            event::MouseButton::Right => {
+                self.right_button_down = true;
+
+                // TODO: No magic numbers
+                let engine = &mut self.engine;
+                let board = engine.board_mut();
+                let pixel_size = board.pixel_size();
+                let tiles = board.tiles_mut();
+                for xx in x as usize - 10..x as usize + 10 {
+                    for yy in y as usize - 10..y as usize + 10 {
+                        match tiles.at(xx / pixel_size, yy / pixel_size) {
+                            Some(Tile::Rock) => {
+                                tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                            }
+                            _ => (),
+                        }
+                    }
+                }
+            }
             event::MouseButton::Middle => self.middle_button_down = true,
             event::MouseButton::Other(_) => (),
         }
@@ -178,6 +196,24 @@ impl EventHandler for Whatever {
                             }
                         }
                         Tile::Air => (),
+                    }
+                }
+            }
+        } else {
+            if self.right_button_down {
+                // TODO: No magic numbers
+                let engine = &mut self.engine;
+                let board = engine.board_mut();
+                let pixel_size = board.pixel_size();
+                let tiles = board.tiles_mut();
+                for xx in x as usize - 10..x as usize + 10 {
+                    for yy in y as usize - 10..y as usize + 10 {
+                        match tiles.at(xx / pixel_size, yy / pixel_size) {
+                            Some(Tile::Rock) => {
+                                tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                            }
+                            _ => (),
+                        }
                     }
                 }
             }
