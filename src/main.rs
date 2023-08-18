@@ -22,7 +22,7 @@ use ggez::{
 use ggez_painter::GgezPainter;
 use tiles::Tile;
 
-const TITLE: &str = "Przelewaj";
+const TITLE: &str = "Przelewaj Sobie Wodziczkę";
 const AUTHOR: &str = "mgr inż. Rafał";
 const VERSION: &str = "0.1.1";
 
