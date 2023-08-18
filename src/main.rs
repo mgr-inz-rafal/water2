@@ -20,6 +20,8 @@ use ggez::{
 };
 use ggez_painter::GgezPainter;
 
+const TITLE: &str = "Przelewaj";
+const AUTHOR: &str = "mgr inż. Rafał";
 const VERSION: &str = "0.1.1";
 
 const WINDOW_WIDTH: usize = 1024;
@@ -72,7 +74,7 @@ impl EventHandler for Whatever {
 }
 
 fn main() {
-    let (ctx, event_loop) = GgezPainter::init(WINDOW_WIDTH, WINDOW_HEIGHT, VERSION);
+    let (ctx, event_loop) = GgezPainter::init(WINDOW_WIDTH, WINDOW_HEIGHT, VERSION, TITLE, AUTHOR);
 
     // let manifest_dir = match env::var("CARGO_MANIFEST_DIR") {
     //     Ok(manifest_dir) => manifest_dir,

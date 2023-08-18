@@ -104,12 +104,18 @@ impl GgezPainter {
     //     None
     // }
 
-    pub(crate) fn init(width: usize, height: usize, version: &str) -> (Context, EventLoop<()>) {
+    pub(crate) fn init(
+        width: usize,
+        height: usize,
+        version: &str,
+        title: &str,
+        author: &str,
+    ) -> (Context, EventLoop<()>) {
         let window_mode = WindowMode::default().dimensions(width as f32, height as f32);
         let window_setup = WindowSetup::default()
-            .title(&format!("Przelewaj by mgr inż. Rafał - v{version}"))
+            .title(&format!("{title} by {author} - v{version}"))
             .samples(NumSamples::One);
-        ContextBuilder::new("Przelewaj", "mgr inż. Rafał")
+        ContextBuilder::new(title, author)
             .window_mode(window_mode)
             .window_setup(window_setup)
             .build()
