@@ -108,7 +108,22 @@ impl EventHandler for Whatever {
                 let tiles = board.tiles_mut();
                 for xx in x as usize - 10..x as usize + 10 {
                     for yy in y as usize - 10..y as usize + 10 {
-                        tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw);
+                        match self.tile_to_draw {
+                            Tile::Rock => {
+                                tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw)
+                            }
+                            Tile::Water => {
+                                let current_tile = tiles.at(xx / pixel_size, yy / pixel_size);
+                                if current_tile == Some(&Tile::Air) {
+                                    tiles.set_at(
+                                        xx / pixel_size,
+                                        yy / pixel_size,
+                                        self.tile_to_draw,
+                                    )
+                                }
+                            }
+                            Tile::Air => (),
+                        }
                     }
                 }
             }
@@ -151,7 +166,19 @@ impl EventHandler for Whatever {
             // TODO: No magic numbers
             for xx in x as usize - 10..x as usize + 10 {
                 for yy in y as usize - 10..y as usize + 10 {
-                    tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw);
+                    // TODO: This is duplicated
+                    match self.tile_to_draw {
+                        Tile::Rock => {
+                            tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw)
+                        }
+                        Tile::Water => {
+                            let current_tile = tiles.at(xx / pixel_size, yy / pixel_size);
+                            if current_tile == Some(&Tile::Air) {
+                                tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw)
+                            }
+                        }
+                        Tile::Air => (),
+                    }
                 }
             }
         }
