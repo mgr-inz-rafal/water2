@@ -26,12 +26,12 @@ impl GgezPainter {
         let mut canvas = graphics::Canvas::from_frame(ctx, Color::WHITE);
 
         let mut mesh_builder = MeshBuilder::default();
-        // TODO: No magic numbers
         for y in 0..playfield.board().height() {
             for x in 0..playfield.board().width() {
                 mesh_builder
                     .rectangle(
                         DrawMode::fill(),
+                        // TODO: No magic numbers
                         Rect::new(x as f32 * 2.0, y as f32 * 2.0, 2.0, 2.0),
                         match playfield.board().tiles().at(x, y) {
                             crate::tiles::Tile::Rock => Color::BLACK,
