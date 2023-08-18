@@ -55,7 +55,7 @@ impl Tiles {
     }
 
     pub(crate) fn at(&self, x: usize, y: usize) -> Option<&Tile> {
-        self.within_limits(x, y).then_some(&self.tiles[y][x])
+        self.within_limits(x, y).then(|| &self.tiles[y][x])
     }
 
     pub(crate) fn set_at(&mut self, x: usize, y: usize, tile: Tile) {
