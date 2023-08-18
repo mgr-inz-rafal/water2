@@ -133,13 +133,21 @@ impl EventHandler for Whatever {
                 // TODO: No magic numbers
                 let engine = &mut self.engine;
                 let board = engine.board_mut();
+                let height = board.height();
+                let width = board.width();
                 let pixel_size = board.pixel_size();
                 let tiles = board.tiles_mut();
                 for xx in x as usize - 10..x as usize + 10 {
                     for yy in y as usize - 10..y as usize + 10 {
                         match tiles.at(xx / pixel_size, yy / pixel_size) {
                             Some(Tile::Rock) => {
-                                tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                                if xx / pixel_size != 0
+                                    && xx / pixel_size != width - 1
+                                    && yy / pixel_size != 0
+                                    && yy / pixel_size != height - 1
+                                {
+                                    tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                                }
                             }
                             _ => (),
                         }
@@ -152,11 +160,19 @@ impl EventHandler for Whatever {
                 // TODO: No magic numbers
                 let engine = &mut self.engine;
                 let board = engine.board_mut();
+                let height = board.height();
+                let width = board.width();
                 let pixel_size = board.pixel_size();
                 let tiles = board.tiles_mut();
                 for xx in x as usize - 10..x as usize + 10 {
                     for yy in y as usize - 10..y as usize + 10 {
-                        tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                        if xx / pixel_size != 0
+                            && xx / pixel_size != width - 1
+                            && yy / pixel_size != 0
+                            && yy / pixel_size != height - 1
+                        {
+                            tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                        }
                     }
                 }
             }
@@ -217,13 +233,21 @@ impl EventHandler for Whatever {
                 // TODO: No magic numbers
                 let engine = &mut self.engine;
                 let board = engine.board_mut();
+                let height = board.height();
+                let width = board.width();
                 let pixel_size = board.pixel_size();
                 let tiles = board.tiles_mut();
                 for xx in x as usize - 10..x as usize + 10 {
                     for yy in y as usize - 10..y as usize + 10 {
                         match tiles.at(xx / pixel_size, yy / pixel_size) {
                             Some(Tile::Rock) => {
-                                tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                                if xx / pixel_size != 0
+                                    && xx / pixel_size != width - 1
+                                    && yy / pixel_size != 0
+                                    && yy / pixel_size != height - 1
+                                {
+                                    tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                                }
                             }
                             _ => (),
                         }
@@ -233,11 +257,19 @@ impl EventHandler for Whatever {
                 // TODO: No magic numbers
                 let engine = &mut self.engine;
                 let board = engine.board_mut();
+                let height = board.height();
+                let width = board.width();
                 let pixel_size = board.pixel_size();
                 let tiles = board.tiles_mut();
                 for xx in x as usize - 10..x as usize + 10 {
                     for yy in y as usize - 10..y as usize + 10 {
-                        tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                        if xx / pixel_size != 0
+                            && xx / pixel_size != width - 1
+                            && yy / pixel_size != 0
+                            && yy / pixel_size != height - 1
+                        {
+                            tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
+                        }
                     }
                 }
             }
