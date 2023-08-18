@@ -95,11 +95,23 @@ impl EventHandler for Whatever {
         &mut self,
         _ctx: &mut Context,
         button: event::MouseButton,
-        _x: f32,
-        _y: f32,
+        x: f32,
+        y: f32,
     ) -> Result<(), ggez::GameError> {
         match button {
-            event::MouseButton::Left => self.left_button_down = true,
+            event::MouseButton::Left => {
+                self.left_button_down = true;
+                // TODO: No magic numbers
+                let engine = &mut self.engine;
+                let board = engine.board_mut();
+                let pixel_size = board.pixel_size();
+                let tiles = board.tiles_mut();
+                for xx in x as usize - 10..x as usize + 10 {
+                    for yy in y as usize - 10..y as usize + 10 {
+                        tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw);
+                    }
+                }
+            }
             event::MouseButton::Right => self.right_button_down = true,
             event::MouseButton::Middle => self.middle_button_down = true,
             event::MouseButton::Other(_) => (),
