@@ -135,7 +135,12 @@ impl EventHandler for Whatever {
             let engine = &mut self.engine;
             let board = engine.board_mut();
             let tiles = board.tiles_mut();
-            tiles.set_at(x as usize / 2, y as usize / 2, self.tile_to_draw);
+            // TODO: No magic numbers
+            for xx in x as usize - 10..x as usize + 10 {
+                for yy in y as usize - 10..y as usize + 10 {
+                    tiles.set_at(xx / 2, yy / 2, self.tile_to_draw);
+                }
+            }
         }
 
         Ok(())
