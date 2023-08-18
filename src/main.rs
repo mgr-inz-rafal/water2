@@ -14,6 +14,7 @@ use board::Board;
 
 use console_painter::{ConsolePainter, HasBoard};
 use engine::Engine;
+use ggez::input::keyboard::{KeyCode, KeyInput, KeyMods};
 use ggez::{
     event::{self, EventHandler},
     Context, GameResult,
@@ -137,6 +138,19 @@ impl EventHandler for Whatever {
             tiles.set_at(x as usize / 2, y as usize / 2, self.tile_to_draw);
         }
 
+        Ok(())
+    }
+
+    fn key_up_event(
+        &mut self,
+        _ctx: &mut Context,
+        input: ggez::input::keyboard::KeyInput,
+    ) -> Result<(), ggez::GameError> {
+        match input.keycode {
+            Some(KeyCode::Key1) => self.tile_to_draw = Tile::Rock,
+            Some(KeyCode::Key2) => self.tile_to_draw = Tile::Water,
+            _ => (),
+        }
         Ok(())
     }
 }
