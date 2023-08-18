@@ -24,6 +24,7 @@ pub(crate) struct GgezPainter {}
 impl GgezPainter {
     pub(crate) fn paint<T: Paintable>(playfield: &T, ctx: &mut Context) -> Result<(), Error> {
         let mut canvas = graphics::Canvas::from_frame(ctx, Color::WHITE);
+        let pixel_size = playfield.board().pixel_size() as f32;
 
         let mut mesh_builder = MeshBuilder::default();
         for y in 0..playfield.board().height() {
@@ -32,7 +33,12 @@ impl GgezPainter {
                     .rectangle(
                         DrawMode::fill(),
                         // TODO: No magic numbers
-                        Rect::new(x as f32 * 2.0, y as f32 * 2.0, 2.0, 2.0),
+                        Rect::new(
+                            x as f32 * pixel_size,
+                            y as f32 * pixel_size,
+                            pixel_size,
+                            pixel_size,
+                        ),
                         match playfield.board().tiles().at(x, y) {
                             Some(Tile::Rock) => Color::BLACK,
                             Some(Tile::Water) => Color::BLUE,

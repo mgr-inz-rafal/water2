@@ -29,7 +29,7 @@ const VERSION: &str = "0.1.1";
 const WINDOW_WIDTH: usize = 1024;
 const WINDOW_HEIGHT: usize = 768;
 
-const PIXEL_SIZE: usize = 2;
+const PIXEL_SIZE: usize = 4;
 
 const PLAYFIELD_WIDTH: usize = WINDOW_WIDTH / PIXEL_SIZE;
 const PLAYFIELD_HEIGHT: usize = WINDOW_HEIGHT / PIXEL_SIZE;
@@ -134,11 +134,12 @@ impl EventHandler for Whatever {
         if self.left_button_down {
             let engine = &mut self.engine;
             let board = engine.board_mut();
+            let pixel_size = board.pixel_size();
             let tiles = board.tiles_mut();
             // TODO: No magic numbers
             for xx in x as usize - 10..x as usize + 10 {
                 for yy in y as usize - 10..y as usize + 10 {
-                    tiles.set_at(xx / 2, yy / 2, self.tile_to_draw);
+                    tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw);
                 }
             }
         }
@@ -169,7 +170,7 @@ fn main() {
     // };
 
     //let mut board = Board::from_image(format!("{}/{}", manifest_dir, "resources/woter02.png"));
-    let board = Board::new(PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT);
+    let board = Board::new(PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT, PIXEL_SIZE);
 
     let mut blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect_quick();
