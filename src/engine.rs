@@ -60,45 +60,49 @@ impl Engine {
             for pt in points.iter().rev() {
                 // Try move down
                 let dest_pt = Point::new(pt.x(), pt.y() + 1);
-                if board.tiles().at(dest_pt.x(), dest_pt.y()).is_air() {
-                    board.swap(pt.x(), pt.y(), pt.x(), pt.y() + 1);
-                    new_points.insert(dest_pt);
-                    did_move_down = true;
-                } else {
-                    new_points.insert(pt.clone());
+                let maybe_tile = board.tiles().at(dest_pt.x(), dest_pt.y());
+                if let Some(tile) = maybe_tile {
+                    if tile.is_air() {
+                        board.swap(pt.x(), pt.y(), pt.x(), pt.y() + 1);
+                        new_points.insert(dest_pt);
+                        did_move_down = true;
+                    } else {
+                        new_points.insert(pt.clone());
 
-                    // Didn't move down, try sideways
-                    let dest_pt_left = Point::new(pt.x() - 1, pt.y());
-                    let dest_pt_right = Point::new(pt.x() + 1, pt.y());
-                    match (
-                        board
-                            .tiles()
-                            .at(dest_pt_left.x(), dest_pt_left.y())
-                            .is_air(),
-                        board
-                            .tiles()
-                            .at(dest_pt_right.x(), dest_pt_right.y())
-                            .is_air(),
-                    ) {
-                        (true, true) => {
-                            if rng.gen::<bool>() {
-                                board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
-                                new_points.insert(Point::new(pt.x() - 1, pt.y()));
-                            } else {
-                                board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
-                                new_points.insert(Point::new(pt.x() + 1, pt.y()));
+                        // Didn't move down, try sideways
+                        let dest_pt_left = Point::new(pt.x() - 1, pt.y());
+                        let dest_pt_right = Point::new(pt.x() + 1, pt.y());
+
+                        let maybe_tile_left = board.tiles().at(dest_pt_left.x(), dest_pt_left.y());
+                        let maybe_tile_right =
+                            board.tiles().at(dest_pt_right.x(), dest_pt_right.y());
+
+                        match (maybe_tile_left, maybe_tile_right) {
+                            (Some(tile_left), Some(tile_right)) => {
+                                match (tile_left.is_air(), tile_right.is_air()) {
+                                    (true, true) => {
+                                        if rng.gen::<bool>() {
+                                            board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
+                                            new_points.insert(Point::new(pt.x() - 1, pt.y()));
+                                        } else {
+                                            board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
+                                            new_points.insert(Point::new(pt.x() + 1, pt.y()));
+                                        }
+                                    }
+                                    (true, false) => {
+                                        board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
+                                        new_points.insert(Point::new(pt.x() - 1, pt.y()));
+                                    }
+                                    (false, true) => {
+                                        board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
+                                        new_points.insert(Point::new(pt.x() + 1, pt.y()));
+                                    }
+                                    (false, false) => {
+                                        new_points.insert(pt.clone());
+                                    }
+                                }
                             }
-                        }
-                        (true, false) => {
-                            board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
-                            new_points.insert(Point::new(pt.x() - 1, pt.y()));
-                        }
-                        (false, true) => {
-                            board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
-                            new_points.insert(Point::new(pt.x() + 1, pt.y()));
-                        }
-                        (false, false) => {
-                            new_points.insert(pt.clone());
+                            _ => (),
                         }
                     }
                 }
@@ -118,8 +122,11 @@ impl Engine {
                         .iter()
                         .rev()
                         .filter(|pt| {
-                            let pt_up = board.tiles().at(pt.x(), pt.y() - 1);
-                            pt_up.is_air() && pt.y() != top_row
+                            if let Some(pt_up) = board.tiles().at(pt.x(), pt.y() - 1) {
+                                pt_up.is_air() && pt.y() != top_row
+                            } else {
+                                false
+                            }
                         })
                         .map(|pt| Point::new(pt.x(), pt.y() - 1))
                         .collect();

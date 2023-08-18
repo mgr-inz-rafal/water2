@@ -55,7 +55,7 @@ impl<'a> BlobDetector<'a> {
             return;
         }
         *recursion_counter += 1;
-        if self.board.tiles().at(x, y) == &Tile::Water
+        if self.board.tiles().at(x, y) == Some(&Tile::Water)
             && !current_blob_points.contains(&Point::new(x, y))
         {
             current_blob_points.insert(Point::new(x, y));
@@ -114,17 +114,17 @@ impl<'a> BlobDetector<'a> {
 
         // TODO: This loop is probably not needed most of the time, since sx and sy point to the water
         for x in sx..self.board.width() {
-            if self.board.tiles().at(x, sy) == &Tile::Water {
+            if self.board.tiles().at(x, sy) == Some(&Tile::Water) {
                 start = Some(x);
                 self.done.insert((x, sy));
 
-                if self.board.tiles().at(x, sy - 1) == &Tile::Water {
+                if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water) {
                     if !self.done.contains(&(x, sy - 1)) {
                         touching.push((x, sy - 1));
                     }
                 }
 
-                if self.board.tiles().at(x, sy + 1) == &Tile::Water {
+                if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water) {
                     if !self.done.contains(&(x, sy + 1)) {
                         touching.push((x, sy + 1));
                     }
@@ -138,19 +138,19 @@ impl<'a> BlobDetector<'a> {
             let mut last_x = None;
             // Find to the right
             for x in start + 1..self.board.width() {
-                if self.board.tiles().at(x, sy) != &Tile::Water {
+                if self.board.tiles().at(x, sy) != Some(&Tile::Water) {
                     break;
                 } else {
                     last_x = Some(x);
                     self.done.insert((x, sy));
 
-                    if self.board.tiles().at(x, sy - 1) == &Tile::Water {
+                    if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water) {
                         if !self.done.contains(&(x, sy - 1)) {
                             touching.push((x, sy - 1));
                         }
                     }
 
-                    if self.board.tiles().at(x, sy + 1) == &Tile::Water {
+                    if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water) {
                         if !self.done.contains(&(x, sy + 1)) {
                             touching.push((x, sy + 1));
                         }
@@ -160,7 +160,7 @@ impl<'a> BlobDetector<'a> {
 
             // Find to the left
             for x in (0..start).rev() {
-                if self.board.tiles().at(x, sy) != &Tile::Water {
+                if self.board.tiles().at(x, sy) != Some(&Tile::Water) {
                     return Some(DetectedLineDef {
                         start: x + 1,
                         end: last_x.unwrap_or(sx),
@@ -169,13 +169,13 @@ impl<'a> BlobDetector<'a> {
                 } else {
                     self.done.insert((x, sy));
 
-                    if self.board.tiles().at(x, sy - 1) == &Tile::Water {
+                    if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water) {
                         if !self.done.contains(&(x, sy - 1)) {
                             touching.push((x, sy - 1));
                         }
                     }
 
-                    if self.board.tiles().at(x, sy + 1) == &Tile::Water {
+                    if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water) {
                         if !self.done.contains(&(x, sy + 1)) {
                             touching.push((x, sy + 1));
                         }
@@ -190,7 +190,8 @@ impl<'a> BlobDetector<'a> {
     fn find_first_water_point(&mut self) -> Option<(usize, usize)> {
         for y in 0..self.board.height() {
             for x in 0..self.board.width() {
-                if !self.done.contains(&(x, y)) && self.board.tiles().at(x, y) == &Tile::Water {
+                if !self.done.contains(&(x, y)) && self.board.tiles().at(x, y) == Some(&Tile::Water)
+                {
                     self.done.insert((x, y));
                     return Some((x, y));
                 }

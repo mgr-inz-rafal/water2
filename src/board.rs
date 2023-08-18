@@ -29,10 +29,15 @@ impl Board {
     }
 
     pub(crate) fn swap(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
-        let source = self.tiles.at(x1, y1).clone();
-        let target = self.tiles.at(x2, y2).clone();
-        self.tiles.set_at(x1, y1, target);
-        self.tiles.set_at(x2, y2, source.clone());
+        let maybe_source = self.tiles.at(x1, y1).cloned();
+        let maybe_target = self.tiles.at(x2, y2).cloned();
+        match (maybe_source, maybe_target) {
+            (Some(source), Some(target)) => {
+                self.tiles.set_at(x1, y1, target);
+                self.tiles.set_at(x2, y2, source);
+            }
+            _ => (),
+        }
     }
 
     pub(crate) fn tiles(&self) -> &Tiles {
@@ -79,7 +84,7 @@ impl Board {
         Self {
             width,
             height,
-            tiles: Tiles::from_str(tiles, width),
+            tiles: Tiles::from_str(tiles, width, height),
         }
     }
 
@@ -106,7 +111,7 @@ impl Board {
         Self {
             width: WIDTH,
             height: HEIGHT,
-            tiles: Tiles::from_str(TEST_1, WIDTH),
+            tiles: Tiles::from_str(TEST_1, WIDTH, HEIGHT),
         }
     }
 }

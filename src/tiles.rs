@@ -15,12 +15,19 @@ impl Tile {
 
 // TODO: Better use single Vec in order to enable faster swapping of items
 #[derive(Clone, Debug)]
-pub(crate) struct Tiles(Vec<Vec<Tile>>);
+pub(crate) struct Tiles {
+    width: usize,
+    height: usize,
+    tiles: Vec<Vec<Tile>>,
+}
 
 impl Tiles {
-    pub(crate) fn from_str(s: &str, width: usize) -> Self {
-        Self(
-            s.chars()
+    pub(crate) fn from_str(s: &str, width: usize, height: usize) -> Self {
+        Self {
+            width,
+            height,
+            tiles: s
+                .chars()
                 .collect::<Vec<_>>()
                 .chunks(width)
                 .map(|chunk| {
@@ -35,19 +42,29 @@ impl Tiles {
                         .collect()
                 })
                 .collect(),
-        )
+        }
     }
 
     pub(crate) fn empty(width: usize, height: usize) -> Self {
         let row = vec![Tile::Air; width];
-        Self(vec![row; height])
+        Self {
+            width,
+            height,
+            tiles: vec![row; height],
+        }
     }
 
-    pub(crate) fn at(&self, x: usize, y: usize) -> &Tile {
-        self.0.get(y).unwrap().get(x).unwrap()
+    pub(crate) fn at(&self, x: usize, y: usize) -> Option<&Tile> {
+        self.within_limits(x, y).then_some(&self.tiles[y][x])
     }
 
     pub(crate) fn set_at(&mut self, x: usize, y: usize, tile: Tile) {
-        *self.0.get_mut(y).unwrap().get_mut(x).unwrap() = tile;
+        if self.within_limits(x, y) {
+            *self.tiles.get_mut(y).unwrap().get_mut(x).unwrap() = tile;
+        }
+    }
+
+    fn within_limits(&self, x: usize, y: usize) -> bool {
+        x < self.width && y < self.height
     }
 }

@@ -39,9 +39,10 @@ impl ConsolePainter {
                 } else {
                     let c = playfield.board().tiles().at(x, y);
                     match c {
-                        Tile::Rock => print!("{}", "#".black().on_white()),
-                        Tile::Water => print!("{}", ",".white()),
-                        Tile::Air => print!("{}", ".".bright_black()),
+                        Some(Tile::Rock) => print!("{}", "#".black().on_white()),
+                        Some(Tile::Water) => print!("{}", ",".white()),
+                        Some(Tile::Air) => print!("{}", ".".bright_black()),
+                        None => print!("{}", "?".magenta()),
                     }
                 }
             }

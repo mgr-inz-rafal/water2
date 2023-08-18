@@ -9,7 +9,7 @@ use ggez::{
     Context, ContextBuilder,
 };
 
-use crate::console_painter::Paintable;
+use crate::{console_painter::Paintable, tiles::Tile};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -34,9 +34,10 @@ impl GgezPainter {
                         // TODO: No magic numbers
                         Rect::new(x as f32 * 2.0, y as f32 * 2.0, 2.0, 2.0),
                         match playfield.board().tiles().at(x, y) {
-                            crate::tiles::Tile::Rock => Color::BLACK,
-                            crate::tiles::Tile::Water => Color::BLUE,
-                            crate::tiles::Tile::Air => Color::WHITE,
+                            Some(Tile::Rock) => Color::BLACK,
+                            Some(Tile::Water) => Color::BLUE,
+                            Some(Tile::Air) => Color::WHITE,
+                            None => Color::MAGENTA,
                         },
                     )
                     .map_err(|_| Error::UnableToDrawRectangle(x, y))?;
