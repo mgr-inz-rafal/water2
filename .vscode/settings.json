@@ -1,7 +1,11 @@
 {
     "cSpell.words": [
+        "ggez",
         "Paintable",
         "playfield",
-        "truecolor"
+        "Przelewaj",
+        "Srgb",
+        "truecolor",
+        "Unorm"
     ]
 }

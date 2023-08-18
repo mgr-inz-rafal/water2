@@ -7,7 +7,7 @@ mod ggez_painter;
 mod point;
 mod tiles;
 
-use std::env;
+use std::{env, f32::consts::PI};
 
 use blob_detector::BlobDetector;
 use board::Board;
@@ -19,6 +19,16 @@ use ggez::{
     Context, GameResult,
 };
 use ggez_painter::GgezPainter;
+
+const VERSION: &str = "0.1.1";
+
+const WINDOW_WIDTH: usize = 1024;
+const WINDOW_HEIGHT: usize = 768;
+
+const PIXEL_SIZE: usize = 2;
+
+const PLAYFIELD_WIDTH: usize = WINDOW_WIDTH / PIXEL_SIZE;
+const PLAYFIELD_HEIGHT: usize = WINDOW_HEIGHT / PIXEL_SIZE;
 
 // fn main() {
 //     let board = Board::new_test_1();
@@ -56,25 +66,26 @@ impl EventHandler for Whatever {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        GgezPainter::paint(&self.engine, ctx);
+        GgezPainter::paint(&self.engine, ctx).unwrap();
         Ok(())
     }
 }
 
 fn main() {
-    let (mut ctx, event_loop) = GgezPainter::init();
+    let (ctx, event_loop) = GgezPainter::init(WINDOW_WIDTH, WINDOW_HEIGHT, VERSION);
 
-    let manifest_dir = match env::var("CARGO_MANIFEST_DIR") {
-        Ok(manifest_dir) => manifest_dir,
-        Err(_) => ".".to_string(),
-    };
+    // let manifest_dir = match env::var("CARGO_MANIFEST_DIR") {
+    //     Ok(manifest_dir) => manifest_dir,
+    //     Err(_) => ".".to_string(),
+    // };
 
-    let mut board = Board::from_image(format!("{}/{}", manifest_dir, "resources/woter02.png"));
+    //let mut board = Board::from_image(format!("{}/{}", manifest_dir, "resources/woter02.png"));
+    let board = Board::new(PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT);
 
     let mut blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect_quick();
 
-    let mut engine = Engine::new(board, blobs);
+    let engine = Engine::new(board, blobs);
 
     let whatever = Whatever::new(engine);
 

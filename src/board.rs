@@ -10,6 +10,24 @@ pub(crate) struct Board {
 }
 
 impl Board {
+    pub(crate) fn new(width: usize, height: usize) -> Self {
+        let mut tiles = Tiles::empty(width, height);
+        for x in 0..width {
+            tiles.set_at(x, 0, Tile::Rock);
+            tiles.set_at(x, height - 1, Tile::Rock);
+        }
+        for y in 0..height {
+            tiles.set_at(0, y, Tile::Rock);
+            tiles.set_at(width - 1, y, Tile::Rock);
+        }
+
+        Self {
+            width,
+            height,
+            tiles,
+        }
+    }
+
     pub(crate) fn swap(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
         let source = self.tiles.at(x1, y1).clone();
         let target = self.tiles.at(x2, y2).clone();

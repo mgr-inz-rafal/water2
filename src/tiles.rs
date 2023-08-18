@@ -13,6 +13,7 @@ impl Tile {
     }
 }
 
+// TODO: Better use single Vec in order to enable faster swapping of items
 #[derive(Clone, Debug)]
 pub(crate) struct Tiles(Vec<Vec<Tile>>);
 
