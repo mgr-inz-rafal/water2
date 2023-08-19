@@ -51,8 +51,8 @@ impl ConsolePainter {
     }
 
     fn blob_index_from_point(x: usize, y: usize, blobs: &Blobs) -> Option<usize> {
-        for (index, points) in blobs {
-            if points.contains(&Point::new(x, y)) {
+        for (index, blob) in blobs {
+            if blob.points().contains(&Point::new(x, y)) {
                 return Some(*index);
             }
         }

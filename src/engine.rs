@@ -53,12 +53,12 @@ impl Engine {
         let mut new_blobs: BTreeMap<usize, Blob> = Default::default();
 
         let start = Instant::now();
-        for (index, points) in blobs {
+        for (index, blob) in blobs {
             let mut new_points: BTreeSet<_> = Default::default();
 
             // TODO: Here we always take points from right to left, hence the the bias for the water to move rightside.
             // Take points row by row from the bottom, but then come from both sides: --> <--
-            for pt in points.iter().rev() {
+            for pt in blob.into_iter() {
                 // Try move down
                 let dest_pt = Point::new(pt.x(), pt.y() + 1);
                 let maybe_tile = board.tiles().at(dest_pt.x(), dest_pt.y());
@@ -106,14 +106,19 @@ impl Engine {
                 }
             }
 
-            new_blobs.insert(index, new_points);
+            new_blobs.insert(index, Blob::new(new_points));
 
-            for (_, points) in new_blobs.iter() {
+            for (_, blob) in new_blobs.iter() {
                 // No single droplet from this blob moved down, try move up.
-                let top_row = points.first().unwrap().y();
-                let top_points: Vec<_> = points.iter().filter(|pt| pt.y() == top_row).collect();
+                let top_row = blob.points().first().unwrap().y();
+                let top_points: Vec<_> = blob
+                    .points()
+                    .iter()
+                    .filter(|pt| pt.y() == top_row)
+                    .collect();
 
-                let destination_candidates: Vec<_> = points
+                let destination_candidates: Vec<_> = blob
+                    .points()
                     .iter()
                     .rev()
                     .filter(|pt| {

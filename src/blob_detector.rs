@@ -43,11 +43,11 @@ impl<'a> BlobDetector<'a> {
         }
     }
 
-    fn try_insert_blob(
+    fn _try_insert_blob(
         &self,
         x: usize,
         y: usize,
-        current_blob_points: &mut Blob,
+        current_blob: &mut Blob,
         recursion_counter: &mut i32,
         visited: &mut BTreeSet<(usize, usize)>,
     ) {
@@ -56,47 +56,48 @@ impl<'a> BlobDetector<'a> {
         }
         *recursion_counter += 1;
         if self.board.tiles().at(x, y) == Some(&Tile::Water)
-            && !current_blob_points.contains(&Point::new(x, y))
+            && !current_blob.points().contains(&Point::new(x, y))
         {
-            current_blob_points.insert(Point::new(x, y));
+            current_blob.points_mut().insert(Point::new(x, y));
             visited.insert((x, y));
-            self.try_insert_blob(x + 1, y, current_blob_points, recursion_counter, visited);
-            self.try_insert_blob(x - 1, y, current_blob_points, recursion_counter, visited);
-            self.try_insert_blob(x, y + 1, current_blob_points, recursion_counter, visited);
-            self.try_insert_blob(x, y - 1, current_blob_points, recursion_counter, visited);
+            self._try_insert_blob(x + 1, y, current_blob, recursion_counter, visited);
+            self._try_insert_blob(x - 1, y, current_blob, recursion_counter, visited);
+            self._try_insert_blob(x, y + 1, current_blob, recursion_counter, visited);
+            self._try_insert_blob(x, y - 1, current_blob, recursion_counter, visited);
         }
     }
 
-    fn already_detected(&self, x: usize, y: usize, detected: &Blobs) -> bool {
+    fn _already_detected(&self, x: usize, y: usize, detected: &Blobs) -> bool {
         detected
             .values()
+            .map(|blob| blob.points())
             .flatten()
             .any(|pt| pt == &Point::new(x, y))
     }
 
-    pub(crate) fn detect_slow(&self) -> Blobs {
+    pub(crate) fn _detect_slow(&self) -> Blobs {
         let start = Instant::now();
         let mut detected: Blobs = Default::default();
 
         for y in 0..self.board.height() {
             for x in 0..self.board.width() {
-                if !self.already_detected(x, y, &detected) {
-                    let mut current_blob_points: Blob = Default::default();
+                if !self._already_detected(x, y, &detected) {
+                    let mut current_blob: Blob = Default::default();
 
                     let mut recursion_counter = 0;
                     let mut visited: BTreeSet<_> = Default::default();
-                    self.try_insert_blob(
+                    self._try_insert_blob(
                         x,
                         y,
-                        &mut current_blob_points,
+                        &mut current_blob,
                         &mut recursion_counter,
                         &mut visited,
                     );
 
-                    if !current_blob_points.is_empty() {
+                    if !current_blob.points().is_empty() {
                         detected.insert(
                             detected.keys().last().map_or(0, |last_key| last_key + 1),
-                            current_blob_points,
+                            current_blob,
                         );
                     }
                 }
@@ -213,7 +214,7 @@ impl<'a> BlobDetector<'a> {
                 let detected_line = self.find_line(x, y);
                 if let Some(detected_line) = detected_line {
                     for b in detected_line.start..=detected_line.end {
-                        blob.insert(Point::new(b, y));
+                        blob.points_mut().insert(Point::new(b, y));
                     }
                     to_be_analyzed.extend(detected_line.touching);
                 }
@@ -230,7 +231,7 @@ impl<'a> BlobDetector<'a> {
                     let detected_line = self.find_line(x, y);
                     if let Some(detected_line) = detected_line {
                         for b in detected_line.start..=detected_line.end {
-                            blob.insert(Point::new(b, y));
+                            blob.points_mut().insert(Point::new(b, y));
                         }
                         to_be_analyzed.extend(detected_line.touching);
                     }
@@ -277,7 +278,7 @@ mod tests {
 
         assert_eq!(blobs, blobs_slow);
 
-        let (_, pts) = blobs.into_iter().next().unwrap();
+        let (_, blob) = blobs.into_iter().next().unwrap();
 
         let result: Vec<_> = TILES
             .chars()
@@ -285,7 +286,7 @@ mod tests {
             .map(|(i, c)| {
                 let y = i / 12;
                 let x = i - y * 12;
-                if pts.contains(&Point::new(x, y)) {
+                if blob.points().contains(&Point::new(x, y)) {
                     'o'
                 } else {
                     '#'
