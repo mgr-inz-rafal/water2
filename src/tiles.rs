@@ -11,6 +11,14 @@ impl Tile {
     pub(crate) fn is_air(&self) -> bool {
         self == &Tile::Air
     }
+
+    pub(crate) fn is_rock(&self) -> bool {
+        self == &Tile::Rock
+    }
+
+    pub(crate) fn is_water(&self) -> bool {
+        self == &Tile::Water
+    }
 }
 
 // TODO: Better use single Vec in order to enable faster swapping of items
