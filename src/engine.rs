@@ -50,13 +50,14 @@ impl Engine {
         } = self;
 
         // TODO: Quite ugly and hacky, please rewrite.
-        let mut new_blobs: BTreeMap<usize, (Blob, bool)> = Default::default();
+        let mut new_blobs: BTreeMap<usize, Blob> = Default::default();
 
         let start = Instant::now();
-        for (index, mut points) in blobs {
+        for (index, points) in blobs {
             let mut new_points: BTreeSet<_> = Default::default();
 
-            let mut did_move_down = false;
+            // TODO: Here we always take points from right to left, hence the the bias for the water to move rightside.
+            // Take points row by row from the bottom, but then come from both sides: --> <--
             for pt in points.iter().rev() {
                 // Try move down
                 let dest_pt = Point::new(pt.x(), pt.y() + 1);
@@ -65,10 +66,7 @@ impl Engine {
                     if tile.is_air() {
                         board.swap(pt.x(), pt.y(), pt.x(), pt.y() + 1);
                         new_points.insert(dest_pt);
-                        did_move_down = true;
                     } else {
-                        new_points.insert(pt.clone());
-
                         // Didn't move down, try sideways
                         let dest_pt_left = Point::new(pt.x() - 1, pt.y());
                         let dest_pt_right = Point::new(pt.x() + 1, pt.y());
@@ -108,47 +106,43 @@ impl Engine {
                 }
             }
 
-            new_blobs.insert(index, (new_points, did_move_down));
+            new_blobs.insert(index, new_points);
 
-            for (_, (points, did_move_down)) in new_blobs.iter() {
-                if
-                /* !did_move_down */
-                true {
-                    // No single droplet from this blob moved down, try move up.
-                    let top_row = points.first().unwrap().y();
-                    let top_points: Vec<_> = points.iter().filter(|pt| pt.y() == top_row).collect();
+            for (_, points) in new_blobs.iter() {
+                // No single droplet from this blob moved down, try move up.
+                let top_row = points.first().unwrap().y();
+                let top_points: Vec<_> = points.iter().filter(|pt| pt.y() == top_row).collect();
 
-                    let destination_candidates: Vec<_> = points
+                let destination_candidates: Vec<_> = points
+                    .iter()
+                    .rev()
+                    .filter(|pt| {
+                        if let Some(pt_up) = board.tiles().at(pt.x(), pt.y() - 1) {
+                            pt_up.is_air() && pt.y() != top_row
+                        } else {
+                            false
+                        }
+                    })
+                    .map(|pt| Point::new(pt.x(), pt.y() - 1))
+                    .collect();
+
+                if !destination_candidates.is_empty() {
+                    let lowest_row = destination_candidates.first().unwrap().y();
+                    let lowest_candidates: Vec<_> = destination_candidates
                         .iter()
-                        .rev()
-                        .filter(|pt| {
-                            if let Some(pt_up) = board.tiles().at(pt.x(), pt.y() - 1) {
-                                pt_up.is_air() && pt.y() != top_row
-                            } else {
-                                false
-                            }
-                        })
-                        .map(|pt| Point::new(pt.x(), pt.y() - 1))
+                        .filter(|pt| pt.y() == lowest_row)
                         .collect();
 
-                    if !destination_candidates.is_empty() {
-                        let lowest_row = destination_candidates.first().unwrap().y();
-                        let lowest_candidates: Vec<_> = destination_candidates
-                            .iter()
-                            .filter(|pt| pt.y() == lowest_row)
-                            .collect();
+                    if !top_points.is_empty() && !lowest_candidates.is_empty() {
+                        let top_point = top_points.choose(&mut rng).unwrap();
+                        let destination_point = lowest_candidates.choose(&mut rng).unwrap();
 
-                        if !top_points.is_empty() && !lowest_candidates.is_empty() {
-                            let top_point = top_points.choose(&mut rng).unwrap();
-                            let destination_point = lowest_candidates.choose(&mut rng).unwrap();
-
-                            board.swap(
-                                top_point.x(),
-                                top_point.y(),
-                                destination_point.x(),
-                                destination_point.y(),
-                            );
-                        }
+                        board.swap(
+                            top_point.x(),
+                            top_point.y(),
+                            destination_point.x(),
+                            destination_point.y(),
+                        );
                     }
                 }
             }
