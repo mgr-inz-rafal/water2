@@ -20,7 +20,7 @@ use ggez::{
     Context, GameResult,
 };
 use ggez_painter::GgezPainter;
-use tiles::Tile;
+use tiles::{Tile, TileUpdateOperation, TileUpdateRule};
 
 const TITLE: &str = "Przelewaj Sobie Wodziczkę";
 const AUTHOR: &str = "mgr inż. Rafał";
@@ -51,36 +51,6 @@ const PLAYFIELD_HEIGHT: usize = WINDOW_HEIGHT / PIXEL_SIZE;
 //         std::io::stdin().read_line(&mut line).unwrap();
 //     }
 // }
-
-enum TileUpdateOperation {
-    Paint(Tile),
-    Erase,
-    Purge,
-}
-
-impl TileUpdateOperation {
-    fn target(&self) -> Tile {
-        match self {
-            TileUpdateOperation::Paint(what) => *what,
-            TileUpdateOperation::Purge | TileUpdateOperation::Erase => Tile::Air,
-        }
-    }
-}
-
-struct TileUpdateRule {}
-
-impl TileUpdateRule {
-    fn is_allowed(current: Option<&Tile>, op: &TileUpdateOperation) -> bool {
-        match op {
-            TileUpdateOperation::Paint(what) => {
-                current.map_or(false, |tile| tile.is_air())
-                    || (what.is_rock() && current.map_or(false, |tile| tile.is_water()))
-            }
-            TileUpdateOperation::Erase => current.map_or(false, |tile| tile.is_rock()),
-            TileUpdateOperation::Purge => true,
-        }
-    }
-}
 
 struct Whatever {
     engine: Engine,
@@ -211,11 +181,15 @@ impl EventHandler for Whatever {
         _dx: f32,
         _dy: f32,
     ) -> Result<(), ggez::GameError> {
-        match (self.left_button_down, self.middle_button_down, self.right_button_down) {
+        match (
+            self.left_button_down,
+            self.middle_button_down,
+            self.right_button_down,
+        ) {
             (true, false, false) => self.draw_tile(x as usize, y as usize),
             (false, true, false) => self.purge_tile(x as usize, y as usize),
             (false, false, true) => self.erase_tile(x as usize, y as usize),
-            _ => ()
+            _ => (),
         }
 
         Ok(())

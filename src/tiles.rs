@@ -21,6 +21,36 @@ impl Tile {
     }
 }
 
+pub(crate) enum TileUpdateOperation {
+    Paint(Tile),
+    Erase,
+    Purge,
+}
+
+impl TileUpdateOperation {
+    pub(crate) fn target(&self) -> Tile {
+        match self {
+            TileUpdateOperation::Paint(what) => *what,
+            TileUpdateOperation::Purge | TileUpdateOperation::Erase => Tile::Air,
+        }
+    }
+}
+
+pub(crate) struct TileUpdateRule {}
+
+impl TileUpdateRule {
+    pub(crate) fn is_allowed(current: Option<&Tile>, op: &TileUpdateOperation) -> bool {
+        match op {
+            TileUpdateOperation::Paint(what) => {
+                current.map_or(false, |tile| tile.is_air())
+                    || (what.is_rock() && current.map_or(false, |tile| tile.is_water()))
+            }
+            TileUpdateOperation::Erase => current.map_or(false, |tile| tile.is_rock()),
+            TileUpdateOperation::Purge => true,
+        }
+    }
+}
+
 // TODO: Better use single Vec in order to enable faster swapping of items
 #[derive(Clone, Debug)]
 pub(crate) struct Tiles {
