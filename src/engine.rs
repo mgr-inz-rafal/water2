@@ -56,8 +56,6 @@ impl Engine {
         for (index, blob) in blobs {
             let mut new_points: BTreeSet<_> = Default::default();
 
-            // TODO: Here we always take points from right to left, hence the the bias for the water to move rightside.
-            // Take points row by row from the bottom, but then come from both sides: --> <--
             for pt in blob.into_iter() {
                 // Try move down
                 let dest_pt = Point::new(pt.x(), pt.y() + 1);
