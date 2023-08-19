@@ -1,11 +1,9 @@
-use std::{env, path::Path};
-
 use thiserror::Error;
 
 use ggez::{
     conf::{NumSamples, WindowMode, WindowSetup},
     event::EventLoop,
-    graphics::{self, Color, DrawMode, DrawParam, Image, ImageFormat, Mesh, MeshBuilder, Rect},
+    graphics::{self, Color, DrawMode, DrawParam, Mesh, MeshBuilder, Rect},
     Context, ContextBuilder,
 };
 

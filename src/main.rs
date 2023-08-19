@@ -7,14 +7,11 @@ mod ggez_painter;
 mod point;
 mod tiles;
 
-use std::{env, f32::consts::PI};
-
 use blob_detector::BlobDetector;
 use board::Board;
 
-use console_painter::{ConsolePainter, HasBoard};
 use engine::Engine;
-use ggez::input::keyboard::{KeyCode, KeyInput, KeyMods};
+use ggez::input::keyboard::KeyCode;
 use ggez::{
     event::{self, EventHandler},
     Context, GameResult,
@@ -74,10 +71,6 @@ impl Whatever {
         }
     }
 
-    fn tile_to_draw(&self) -> &Tile {
-        &self.tile_to_draw
-    }
-
     fn update_tile(&mut self, x: usize, y: usize, op: &TileUpdateOperation) {
         // TODO: No magic numbers
         let engine = &mut self.engine;
@@ -86,8 +79,8 @@ impl Whatever {
         let width = board.width();
         let pixel_size = board.pixel_size();
         let tiles = board.tiles_mut();
-        for xx in x as usize - 10..x as usize + 10 {
-            for yy in y as usize - 10..y as usize + 10 {
+        for xx in x - 10..x + 10 {
+            for yy in y - 10..y + 10 {
                 let current = tiles.at(xx / pixel_size, yy / pixel_size);
                 if Self::within_bounds(xx, yy, height, width, pixel_size)
                     && TileUpdateRule::is_allowed(current, op)

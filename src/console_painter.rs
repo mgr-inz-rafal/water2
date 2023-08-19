@@ -1,3 +1,6 @@
+// Console painter is temporarily not used at all.
+#![allow(dead_code)]
+
 use colored::Colorize;
 
 use crate::{blobs::Blobs, board::Board, point::Point, tiles::Tile};
@@ -30,7 +33,7 @@ const COLORS: &[(u8, u8, u8)] = &[
 pub(crate) struct ConsolePainter {}
 
 impl ConsolePainter {
-    pub(crate) fn paint<T: Paintable>(playfield: &T) {
+    pub(crate) fn _paint<T: Paintable>(playfield: &T) {
         for y in 0..playfield.board().height() {
             for x in 0..playfield.board().width() {
                 if let Some(blob_index) = Self::blob_index_from_point(x, y, playfield.blobs()) {

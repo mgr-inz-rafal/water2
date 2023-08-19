@@ -1,9 +1,9 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 
 use itertools::Itertools;
 use rand::{rngs::ThreadRng, Rng};
 
-use crate::point::{self, Point};
+use crate::point::Point;
 
 pub(crate) type Blobs = BTreeMap<usize, Blob>;
 
@@ -45,7 +45,7 @@ pub(crate) struct PointIterator<'a> {
 impl<'a> PointIterator<'a> {
     pub(crate) fn new(points: &'a BTreeSet<Point>) -> Self {
         let grouped_points = points
-            .into_iter()
+            .iter()
             .into_grouping_map_by(|pt| pt.y())
             .collect::<BTreeSet<_>>(); // TODO: HashSet?
 
@@ -72,16 +72,13 @@ impl<'a> Iterator for PointIterator<'a> {
         }
 
         if let Some(lowest_row) = self.keys.last() {
-            // TODO: Check if this gonna be faster with Vec, which is IndexMut and can work with choose()
-            // Currently we think we save time by having `&'a Point` instead of owned one, but we probably loose more
-            // time with these iter().skip() and clone()
+            // TODO: Check if this gonna be faster with Vec, which is IndexMut and can work with choose().
+            // nth() may be too costly.
             let points_in_row = self.points.get_mut(lowest_row).unwrap();
-            let selected_point = points_in_row
+            let selected_point = *points_in_row
                 .iter()
-                .skip(self.rng.gen_range(0..points_in_row.len()))
-                .next()
-                .unwrap()
-                .clone();
+                .nth(self.rng.gen_range(0..points_in_row.len()))
+                .unwrap();
             points_in_row.remove(selected_point);
             return Some(selected_point);
         }

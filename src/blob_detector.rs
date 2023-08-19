@@ -25,16 +25,6 @@ struct DetectedLineDef {
     touching: Vec<(usize, usize)>,
 }
 
-impl DetectedLineDef {
-    fn new(start: usize, end: usize, touching: Vec<(usize, usize)>) -> Self {
-        Self {
-            start,
-            end,
-            touching,
-        }
-    }
-}
-
 impl<'a> BlobDetector<'a> {
     pub(crate) fn new(board: &'a Board) -> Self {
         Self {
@@ -67,7 +57,8 @@ impl<'a> BlobDetector<'a> {
         }
     }
 
-    fn _already_detected(&self, x: usize, y: usize, detected: &Blobs) -> bool {
+    #[cfg(test)]
+    fn already_detected(&self, x: usize, y: usize, detected: &Blobs) -> bool {
         detected
             .values()
             .map(|blob| blob.points())
@@ -75,13 +66,14 @@ impl<'a> BlobDetector<'a> {
             .any(|pt| pt == &Point::new(x, y))
     }
 
-    pub(crate) fn _detect_slow(&self) -> Blobs {
+    #[cfg(test)]
+    pub(crate) fn detect_slow(&self) -> Blobs {
         let start = Instant::now();
         let mut detected: Blobs = Default::default();
 
         for y in 0..self.board.height() {
             for x in 0..self.board.width() {
-                if !self._already_detected(x, y, &detected) {
+                if !self.already_detected(x, y, &detected) {
                     let mut current_blob: Blob = Default::default();
 
                     let mut recursion_counter = 0;
@@ -119,16 +111,16 @@ impl<'a> BlobDetector<'a> {
                 start = Some(x);
                 self.done.insert((x, sy));
 
-                if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water) {
-                    if !self.done.contains(&(x, sy - 1)) {
-                        touching.push((x, sy - 1));
-                    }
+                if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water)
+                    && !self.done.contains(&(x, sy - 1))
+                {
+                    touching.push((x, sy - 1));
                 }
 
-                if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water) {
-                    if !self.done.contains(&(x, sy + 1)) {
-                        touching.push((x, sy + 1));
-                    }
+                if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water)
+                    && !self.done.contains(&(x, sy + 1))
+                {
+                    touching.push((x, sy + 1));
                 }
 
                 break;
@@ -145,16 +137,16 @@ impl<'a> BlobDetector<'a> {
                     last_x = Some(x);
                     self.done.insert((x, sy));
 
-                    if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water) {
-                        if !self.done.contains(&(x, sy - 1)) {
-                            touching.push((x, sy - 1));
-                        }
+                    if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water)
+                        && !self.done.contains(&(x, sy - 1))
+                    {
+                        touching.push((x, sy - 1));
                     }
 
-                    if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water) {
-                        if !self.done.contains(&(x, sy + 1)) {
-                            touching.push((x, sy + 1));
-                        }
+                    if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water)
+                        && !self.done.contains(&(x, sy + 1))
+                    {
+                        touching.push((x, sy + 1));
                     }
                 }
             }
@@ -170,16 +162,16 @@ impl<'a> BlobDetector<'a> {
                 } else {
                     self.done.insert((x, sy));
 
-                    if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water) {
-                        if !self.done.contains(&(x, sy - 1)) {
-                            touching.push((x, sy - 1));
-                        }
+                    if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water)
+                        && !self.done.contains(&(x, sy - 1))
+                    {
+                        touching.push((x, sy - 1));
                     }
 
-                    if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water) {
-                        if !self.done.contains(&(x, sy + 1)) {
-                            touching.push((x, sy + 1));
-                        }
+                    if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water)
+                        && !self.done.contains(&(x, sy + 1))
+                    {
+                        touching.push((x, sy + 1));
                     }
                 }
             }
@@ -244,7 +236,7 @@ impl<'a> BlobDetector<'a> {
             index += 1;
         }
 
-        let duration = start.elapsed();
+        let _duration = start.elapsed();
 
         blobs
     }
@@ -283,7 +275,7 @@ mod tests {
         let result: Vec<_> = TILES
             .chars()
             .enumerate()
-            .map(|(i, c)| {
+            .map(|(i, _)| {
                 let y = i / 12;
                 let x = i - y * 12;
                 if blob.points().contains(&Point::new(x, y)) {

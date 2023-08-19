@@ -34,12 +34,9 @@ impl Board {
     pub(crate) fn swap(&mut self, x1: usize, y1: usize, x2: usize, y2: usize) {
         let maybe_source = self.tiles.at(x1, y1).cloned();
         let maybe_target = self.tiles.at(x2, y2).cloned();
-        match (maybe_source, maybe_target) {
-            (Some(source), Some(target)) => {
-                self.tiles.set_at(x1, y1, target);
-                self.tiles.set_at(x2, y2, source);
-            }
-            _ => (),
+        if let (Some(source), Some(target)) = (maybe_source, maybe_target) {
+            self.tiles.set_at(x1, y1, target);
+            self.tiles.set_at(x2, y2, source);
         }
     }
 
@@ -59,7 +56,8 @@ impl Board {
         self.height
     }
 
-    pub(crate) fn from_image(path: impl AsRef<Path>) -> Self {
+    // This will eventually be used when we add an option to load the board from bitmap.
+    pub(crate) fn _from_image(path: impl AsRef<Path>) -> Self {
         let image = image::open(path).unwrap().to_rgb8();
         let pixels = image.enumerate_pixels();
 
@@ -84,6 +82,7 @@ impl Board {
         board
     }
 
+    #[cfg(test)]
     pub(crate) fn new_from_str(width: usize, height: usize, tiles: &str) -> Self {
         Self {
             width,
@@ -93,7 +92,8 @@ impl Board {
         }
     }
 
-    pub(crate) fn new_test_1() -> Self {
+    #[cfg(test)]
+    pub(crate) fn _new_test_1() -> Self {
         const WIDTH: usize = 10;
         const HEIGHT: usize = 16;
         const TEST_1: &str = "##########\

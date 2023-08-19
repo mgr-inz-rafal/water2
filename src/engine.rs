@@ -1,6 +1,5 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
-    thread::Thread,
     time::Instant,
 };
 
@@ -73,32 +72,31 @@ impl Engine {
                         let maybe_tile_right =
                             board.tiles().at(dest_pt_right.x(), dest_pt_right.y());
 
-                        match (maybe_tile_left, maybe_tile_right) {
-                            (Some(tile_left), Some(tile_right)) => {
-                                match (tile_left.is_air(), tile_right.is_air()) {
-                                    (true, true) => {
-                                        if rng.gen::<bool>() {
-                                            board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
-                                            new_points.insert(Point::new(pt.x() - 1, pt.y()));
-                                        } else {
-                                            board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
-                                            new_points.insert(Point::new(pt.x() + 1, pt.y()));
-                                        }
-                                    }
-                                    (true, false) => {
+                        if let (Some(tile_left), Some(tile_right)) =
+                            (maybe_tile_left, maybe_tile_right)
+                        {
+                            match (tile_left.is_air(), tile_right.is_air()) {
+                                (true, true) => {
+                                    if rng.gen::<bool>() {
                                         board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
                                         new_points.insert(Point::new(pt.x() - 1, pt.y()));
-                                    }
-                                    (false, true) => {
+                                    } else {
                                         board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
                                         new_points.insert(Point::new(pt.x() + 1, pt.y()));
                                     }
-                                    (false, false) => {
-                                        new_points.insert(pt.clone());
-                                    }
+                                }
+                                (true, false) => {
+                                    board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
+                                    new_points.insert(Point::new(pt.x() - 1, pt.y()));
+                                }
+                                (false, true) => {
+                                    board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
+                                    new_points.insert(Point::new(pt.x() + 1, pt.y()));
+                                }
+                                (false, false) => {
+                                    new_points.insert(pt.clone());
                                 }
                             }
-                            _ => (),
                         }
                     }
                 }
@@ -150,7 +148,7 @@ impl Engine {
                 }
             }
         }
-        let duration = start.elapsed();
+        let _duration = start.elapsed();
 
         // TODO: It's super inefficient to re-detect blobs each tick.
         // Split and merge blobs as they move.
