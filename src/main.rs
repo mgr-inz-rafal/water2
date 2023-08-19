@@ -53,19 +53,28 @@ const PLAYFIELD_HEIGHT: usize = WINDOW_HEIGHT / PIXEL_SIZE;
 // }
 
 enum TileUpdateOperation {
-    Paint,
+    Paint(Tile),
     Erase,
     Purge,
+}
+
+impl TileUpdateOperation {
+    fn target(&self) -> Tile {
+        match self {
+            TileUpdateOperation::Paint(what) => *what,
+            TileUpdateOperation::Purge | TileUpdateOperation::Erase => Tile::Air,
+        }
+    }
 }
 
 struct TileUpdateRule {}
 
 impl TileUpdateRule {
-    fn is_allowed(current: Option<&Tile>, updated: &Tile, op: TileUpdateOperation) -> bool {
+    fn is_allowed(current: Option<&Tile>, op: &TileUpdateOperation) -> bool {
         match op {
-            TileUpdateOperation::Paint => {
-                updated.is_air()
-                    || (updated.is_rock() && current.map_or(false, |tile| tile.is_water()))
+            TileUpdateOperation::Paint(what) => {
+                current.map_or(false, |tile| tile.is_air())
+                    || (what.is_rock() && current.map_or(false, |tile| tile.is_water()))
             }
             TileUpdateOperation::Erase => current.map_or(false, |tile| tile.is_rock()),
             TileUpdateOperation::Purge => true,
@@ -99,7 +108,7 @@ impl Whatever {
         &self.tile_to_draw
     }
 
-    fn purge_tile(&mut self, x: usize, y: usize) {
+    fn update_tile(&mut self, x: usize, y: usize, op: &TileUpdateOperation) {
         // TODO: No magic numbers
         let engine = &mut self.engine;
         let board = engine.board_mut();
@@ -110,85 +119,39 @@ impl Whatever {
         for xx in x as usize - 10..x as usize + 10 {
             for yy in y as usize - 10..y as usize + 10 {
                 let current = tiles.at(xx / pixel_size, yy / pixel_size);
-                if TileUpdateRule::is_allowed(current, &Tile::Air, TileUpdateOperation::Purge) {
-                    if xx / pixel_size != 0
-                        && xx / pixel_size != width - 1
-                        && yy / pixel_size != 0
-                        && yy / pixel_size != height - 1
-                    {
-                        tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
-                    }
+                if Self::within_bounds(xx, yy, height, width, pixel_size)
+                    && TileUpdateRule::is_allowed(current, op)
+                {
+                    tiles.set_at(xx / pixel_size, yy / pixel_size, op.target())
                 }
             }
         }
+    }
+
+    fn within_bounds(x: usize, y: usize, height: usize, width: usize, pixel_size: usize) -> bool {
+        // TODO: No magic numbers
+        x / pixel_size != 0
+            && x / pixel_size != width - 1
+            && y / pixel_size != 0
+            && y / pixel_size != height - 1
+    }
+
+    fn purge_tile(&mut self, x: usize, y: usize) {
+        self.update_tile(x, y, &TileUpdateOperation::Purge);
     }
 
     fn erase_tile(&mut self, x: usize, y: usize) {
-        // TODO: No magic numbers
-        let engine = &mut self.engine;
-        let board = engine.board_mut();
-        let height = board.height();
-        let width = board.width();
-        let pixel_size = board.pixel_size();
-        let tiles = board.tiles_mut();
-        for xx in x as usize - 10..x as usize + 10 {
-            for yy in y as usize - 10..y as usize + 10 {
-                let current = tiles.at(xx / pixel_size, yy / pixel_size);
-                if TileUpdateRule::is_allowed(current, &Tile::Air, TileUpdateOperation::Erase) {
-                    if xx / pixel_size != 0
-                        && xx / pixel_size != width - 1
-                        && yy / pixel_size != 0
-                        && yy / pixel_size != height - 1
-                    {
-                        tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
-                    }
-                }
-            }
-        }
+        self.update_tile(x, y, &TileUpdateOperation::Erase);
     }
 
     fn draw_tile(&mut self, x: usize, y: usize) {
-        // TODO: No magic numbers
-        let engine = &mut self.engine;
-        let board = engine.board_mut();
-        let height = board.height();
-        let width = board.width();
-        let pixel_size = board.pixel_size();
-        let tiles = board.tiles_mut();
-        for xx in x as usize - 10..x as usize + 10 {
-            for yy in y as usize - 10..y as usize + 10 {
-                let current = tiles.at(xx / pixel_size, yy / pixel_size);
-                if TileUpdateRule::is_allowed(
-                    current,
-                    &self.tile_to_draw,
-                    TileUpdateOperation::Paint,
-                ) {
-                    if xx / pixel_size != 0
-                        && xx / pixel_size != width - 1
-                        && yy / pixel_size != 0
-                        && yy / pixel_size != height - 1
-                    {
-                        tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw)
-                    }
-                }
-
-                // match self.tile_to_draw {
-                //     Tile::Rock => tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw),
-                //     Tile::Water => {
-                //         let current_tile = tiles.at(xx / pixel_size, yy / pixel_size);
-                //         if current_tile == Some(&Tile::Air) {
-                //             tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw)
-                //         }
-                //     }
-                //     Tile::Air => (),
-                // }
-            }
-        }
+        self.update_tile(x, y, &TileUpdateOperation::Paint(self.tile_to_draw));
     }
 }
 
 impl EventHandler for Whatever {
     fn update(&mut self, _ctx: &mut Context) -> GameResult {
+        // TODO: clone()? really?
         let x = self.engine.clone();
         self.engine = x.tick();
         Ok(())
@@ -248,74 +211,11 @@ impl EventHandler for Whatever {
         _dx: f32,
         _dy: f32,
     ) -> Result<(), ggez::GameError> {
-        if self.left_button_down {
-            let engine = &mut self.engine;
-            let board = engine.board_mut();
-            let pixel_size = board.pixel_size();
-            let tiles = board.tiles_mut();
-            // TODO: No magic numbers
-            for xx in x as usize - 10..x as usize + 10 {
-                for yy in y as usize - 10..y as usize + 10 {
-                    // TODO: This is duplicated
-                    match self.tile_to_draw {
-                        Tile::Rock => {
-                            tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw)
-                        }
-                        Tile::Water => {
-                            let current_tile = tiles.at(xx / pixel_size, yy / pixel_size);
-                            if current_tile == Some(&Tile::Air) {
-                                tiles.set_at(xx / pixel_size, yy / pixel_size, self.tile_to_draw)
-                            }
-                        }
-                        Tile::Air => (),
-                    }
-                }
-            }
-        } else {
-            if self.right_button_down {
-                // TODO: No magic numbers
-                let engine = &mut self.engine;
-                let board = engine.board_mut();
-                let height = board.height();
-                let width = board.width();
-                let pixel_size = board.pixel_size();
-                let tiles = board.tiles_mut();
-                for xx in x as usize - 10..x as usize + 10 {
-                    for yy in y as usize - 10..y as usize + 10 {
-                        match tiles.at(xx / pixel_size, yy / pixel_size) {
-                            Some(Tile::Rock) => {
-                                if xx / pixel_size != 0
-                                    && xx / pixel_size != width - 1
-                                    && yy / pixel_size != 0
-                                    && yy / pixel_size != height - 1
-                                {
-                                    tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
-                                }
-                            }
-                            _ => (),
-                        }
-                    }
-                }
-            } else if self.middle_button_down {
-                // TODO: No magic numbers
-                let engine = &mut self.engine;
-                let board = engine.board_mut();
-                let height = board.height();
-                let width = board.width();
-                let pixel_size = board.pixel_size();
-                let tiles = board.tiles_mut();
-                for xx in x as usize - 10..x as usize + 10 {
-                    for yy in y as usize - 10..y as usize + 10 {
-                        if xx / pixel_size != 0
-                            && xx / pixel_size != width - 1
-                            && yy / pixel_size != 0
-                            && yy / pixel_size != height - 1
-                        {
-                            tiles.set_at(xx / pixel_size, yy / pixel_size, Tile::Air)
-                        }
-                    }
-                }
-            }
+        match (self.left_button_down, self.middle_button_down, self.right_button_down) {
+            (true, false, false) => self.draw_tile(x as usize, y as usize),
+            (false, true, false) => self.purge_tile(x as usize, y as usize),
+            (false, false, true) => self.erase_tile(x as usize, y as usize),
+            _ => ()
         }
 
         Ok(())
