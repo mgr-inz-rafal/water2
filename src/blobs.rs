@@ -74,6 +74,9 @@ impl<'a> Iterator for PointIterator<'a> {
         if let Some(lowest_row) = self.keys.last() {
             // TODO: Check if this gonna be faster with Vec, which is IndexMut and can work with choose().
             // nth() may be too costly.
+
+            // Ultimately, when detecting blobs we can add points from each scanned horizontal line
+            // in random order, and drop BTreeSet in favor of HashSet to store blob points.
             let points_in_row = self.points.get_mut(lowest_row).unwrap();
             let selected_point = *points_in_row
                 .iter()
