@@ -49,7 +49,7 @@ const PLAYFIELD_HEIGHT: usize = WINDOW_HEIGHT / PIXEL_SIZE;
 //     }
 // }
 
-struct Whatever {
+struct Game {
     engine: Engine,
 
     // Drawing
@@ -60,7 +60,7 @@ struct Whatever {
     tile_to_draw: Tile,
 }
 
-impl Whatever {
+impl Game {
     fn new(engine: Engine) -> Self {
         Self {
             engine,
@@ -112,11 +112,9 @@ impl Whatever {
     }
 }
 
-impl EventHandler for Whatever {
+impl EventHandler for Game {
     fn update(&mut self, _ctx: &mut Context) -> GameResult {
-        // TODO: clone()? really?
-        let x = self.engine.clone();
-        self.engine = x.tick();
+        self.engine.tick();
         Ok(())
     }
 
@@ -218,7 +216,7 @@ fn main() {
 
     let engine = Engine::new(board, blobs);
 
-    let whatever = Whatever::new(engine);
+    let whatever = Game::new(engine);
 
     event::run(ctx, event_loop, whatever);
 }

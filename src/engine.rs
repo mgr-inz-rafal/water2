@@ -41,56 +41,51 @@ impl Engine {
         &self.blobs
     }
 
-    pub(crate) fn tick(self) -> Engine {
-        let Engine {
-            mut board,
-            blobs,
-            mut rng,
-        } = self;
-
+    pub(crate) fn tick(&mut self) {
         // TODO: Quite ugly and hacky, please rewrite.
         let mut new_blobs: BTreeMap<usize, Blob> = Default::default();
 
         let start = Instant::now();
-        for (index, blob) in blobs {
+        for (index, blob) in &self.blobs {
             let mut new_points: BTreeSet<_> = Default::default();
 
             for pt in blob.into_iter() {
                 // Try move down
                 let dest_pt = Point::new(pt.x(), pt.y() + 1);
-                let maybe_tile = board.tiles().at(dest_pt.x(), dest_pt.y());
+                let maybe_tile = self.board.tiles().at(dest_pt.x(), dest_pt.y());
                 if let Some(tile) = maybe_tile {
                     if tile.is_air() {
-                        board.swap(pt.x(), pt.y(), pt.x(), pt.y() + 1);
+                        self.board.swap(pt.x(), pt.y(), pt.x(), pt.y() + 1);
                         new_points.insert(dest_pt);
                     } else {
                         // Didn't move down, try sideways
                         let dest_pt_left = Point::new(pt.x() - 1, pt.y());
                         let dest_pt_right = Point::new(pt.x() + 1, pt.y());
 
-                        let maybe_tile_left = board.tiles().at(dest_pt_left.x(), dest_pt_left.y());
+                        let maybe_tile_left =
+                            self.board.tiles().at(dest_pt_left.x(), dest_pt_left.y());
                         let maybe_tile_right =
-                            board.tiles().at(dest_pt_right.x(), dest_pt_right.y());
+                            self.board.tiles().at(dest_pt_right.x(), dest_pt_right.y());
 
                         if let (Some(tile_left), Some(tile_right)) =
                             (maybe_tile_left, maybe_tile_right)
                         {
                             match (tile_left.is_air(), tile_right.is_air()) {
                                 (true, true) => {
-                                    if rng.gen::<bool>() {
-                                        board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
+                                    if self.rng.gen::<bool>() {
+                                        self.board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
                                         new_points.insert(Point::new(pt.x() - 1, pt.y()));
                                     } else {
-                                        board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
+                                        self.board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
                                         new_points.insert(Point::new(pt.x() + 1, pt.y()));
                                     }
                                 }
                                 (true, false) => {
-                                    board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
+                                    self.board.swap(pt.x(), pt.y(), pt.x() - 1, pt.y());
                                     new_points.insert(Point::new(pt.x() - 1, pt.y()));
                                 }
                                 (false, true) => {
-                                    board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
+                                    self.board.swap(pt.x(), pt.y(), pt.x() + 1, pt.y());
                                     new_points.insert(Point::new(pt.x() + 1, pt.y()));
                                 }
                                 (false, false) => {
@@ -102,7 +97,7 @@ impl Engine {
                 }
             }
 
-            new_blobs.insert(index, Blob::new(new_points));
+            new_blobs.insert(*index, Blob::new(new_points));
 
             for (_, blob) in new_blobs.iter() {
                 // No single droplet from this blob moved down, try move up.
@@ -118,7 +113,7 @@ impl Engine {
                     .iter()
                     .rev()
                     .filter(|pt| {
-                        if let Some(pt_up) = board.tiles().at(pt.x(), pt.y() - 1) {
+                        if let Some(pt_up) = self.board.tiles().at(pt.x(), pt.y() - 1) {
                             pt_up.is_air() && pt.y() != top_row
                         } else {
                             false
@@ -135,10 +130,10 @@ impl Engine {
                         .collect();
 
                     if !top_points.is_empty() && !lowest_candidates.is_empty() {
-                        let top_point = top_points.choose(&mut rng).unwrap();
-                        let destination_point = lowest_candidates.choose(&mut rng).unwrap();
+                        let top_point = top_points.choose(&mut self.rng).unwrap();
+                        let destination_point = lowest_candidates.choose(&mut self.rng).unwrap();
 
-                        board.swap(
+                        self.board.swap(
                             top_point.x(),
                             top_point.y(),
                             destination_point.x(),
@@ -152,10 +147,10 @@ impl Engine {
 
         // TODO: It's super inefficient to re-detect blobs each tick.
         // Split and merge blobs as they move.
-        let mut blob_detector = BlobDetector::new(&board);
-        let blobs = blob_detector.detect_quick();
+        let mut blob_detector = BlobDetector::new(&self.board);
+        self.blobs = blob_detector.detect_quick();
 
-        Engine { board, blobs, rng }
+        //        Engine { board, blobs, rng }
     }
 }
 
