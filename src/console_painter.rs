@@ -30,12 +30,15 @@ const COLORS: &[(u8, u8, u8)] = &[
     (0, 128, 128),
 ];
 
+// Don't allow huge previews on the console, as it is only used for debugging using a smallish boards.
+const DRAW_LIMIT: usize = 20;
+
 pub(crate) struct ConsolePainter {}
 
 impl ConsolePainter {
-    pub(crate) fn _paint<T: Paintable>(playfield: &T) {
-        for y in 0..playfield.board().height() {
-            for x in 0..playfield.board().width() {
+    pub(crate) fn paint<T: Paintable>(playfield: &T) {
+        for y in 0..std::cmp::min(playfield.board().height(), DRAW_LIMIT) {
+            for x in 0..std::cmp::min(playfield.board().width(), DRAW_LIMIT) {
                 if let Some(blob_index) = Self::blob_index_from_point(x, y, playfield.blobs()) {
                     let (r, g, b) = COLORS[blob_index];
                     print!("{}", "o".truecolor(r, g, b))
