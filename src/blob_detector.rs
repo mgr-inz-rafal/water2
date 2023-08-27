@@ -22,7 +22,7 @@ pub(crate) struct BlobDetector<'a> {
 struct DetectedLineDef {
     start: usize,
     end: usize,
-    touching: Vec<(usize, usize)>,
+    touching: BTreeSet<(usize, usize)>,
 }
 
 impl<'a> BlobDetector<'a> {
@@ -103,23 +103,11 @@ impl<'a> BlobDetector<'a> {
 
     fn find_line(&mut self, sx: usize, sy: usize) -> Option<DetectedLineDef> {
         let mut start = None;
-        let mut touching = Vec::new();
+        let mut touching = BTreeSet::new();
 
         if self.board.tiles().at(sx, sy) == Some(&Tile::Water) {
             start = Some(sx);
-            self.done.insert((sx, sy));
-
-            if self.board.tiles().at(sx, sy - 1) == Some(&Tile::Water)
-                && !self.done.contains(&(sx, sy - 1))
-            {
-                touching.push((sx, sy - 1));
-            }
-
-            if self.board.tiles().at(sx, sy + 1) == Some(&Tile::Water)
-                && !self.done.contains(&(sx, sy + 1))
-            {
-                touching.push((sx, sy + 1));
-            }
+            self.update_touching(sx, sy, &mut touching);
         }
 
         if let Some(start) = start {
@@ -130,19 +118,7 @@ impl<'a> BlobDetector<'a> {
                     break;
                 } else {
                     last_x = Some(x);
-                    self.done.insert((x, sy));
-
-                    if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water)
-                        && !self.done.contains(&(x, sy - 1))
-                    {
-                        touching.push((x, sy - 1));
-                    }
-
-                    if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water)
-                        && !self.done.contains(&(x, sy + 1))
-                    {
-                        touching.push((x, sy + 1));
-                    }
+                    self.update_touching(x, sy, &mut touching);
                 }
             }
 
@@ -155,24 +131,26 @@ impl<'a> BlobDetector<'a> {
                         touching,
                     });
                 } else {
-                    self.done.insert((x, sy));
-
-                    if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water)
-                        && !self.done.contains(&(x, sy - 1))
-                    {
-                        touching.push((x, sy - 1));
-                    }
-
-                    if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water)
-                        && !self.done.contains(&(x, sy + 1))
-                    {
-                        touching.push((x, sy + 1));
-                    }
+                    self.update_touching(x, sy, &mut touching);
                 }
             }
         }
 
         None
+    }
+
+    fn update_touching(&mut self, x: usize, y: usize, touching: &mut BTreeSet<(usize, usize)>) {
+        self.done.insert((x, y));
+
+        if !self.done.contains(&(x, y - 1)) && self.board.tiles().at(x, y - 1) == Some(&Tile::Water)
+        {
+            touching.insert((x, y - 1));
+        }
+
+        if !self.done.contains(&(x, y + 1)) && self.board.tiles().at(x, y + 1) == Some(&Tile::Water)
+        {
+            touching.insert((x, y + 1));
+        }
     }
 
     fn find_first_water_point(&mut self) -> Option<(usize, usize)> {
@@ -191,22 +169,20 @@ impl<'a> BlobDetector<'a> {
     // TODO: no mut, hold the `done` as function local variable
     pub(crate) fn detect_quick(&mut self) -> Blobs {
         let start = Instant::now();
-        let mut index = 0;
         let mut blobs: Blobs = Default::default();
         loop {
             let first_point = self.find_first_water_point();
             let mut to_be_analyzed: VecDeque<_> = Default::default();
             let mut blob: Blob = Default::default();
             if let Some((x, y)) = first_point {
-                let detected_line = self.find_line(x, y);
-                if let Some(detected_line) = detected_line {
-                    for b in detected_line.start..=detected_line.end {
-                        blob.points_mut().insert(Point::new(b, y));
-                    }
+                self.find_line(x, y).map(|detected_line| {
+                    blob.points_mut().extend(
+                        (detected_line.start..=detected_line.end).map(|b| Point::new(b, y)),
+                    );
                     to_be_analyzed.extend(detected_line.touching);
-                }
+                });
             } else {
-                break;
+                return blobs;
             }
 
             loop {
@@ -215,20 +191,18 @@ impl<'a> BlobDetector<'a> {
                     if self.done.contains(&(x, y)) {
                         continue;
                     }
-                    let detected_line = self.find_line(x, y);
-                    if let Some(detected_line) = detected_line {
-                        for b in detected_line.start..=detected_line.end {
-                            blob.points_mut().insert(Point::new(b, y));
-                        }
+                    self.find_line(x, y).map(|detected_line| {
+                        blob.points_mut().extend(
+                            (detected_line.start..=detected_line.end).map(|b| Point::new(b, y)),
+                        );
                         to_be_analyzed.extend(detected_line.touching);
-                    }
+                    });
                 } else {
                     break;
                 }
             }
 
-            blobs.insert(index, blob);
-            index += 1;
+            blobs.insert(blobs.len(), blob);
         }
 
         let _duration = start.elapsed();
