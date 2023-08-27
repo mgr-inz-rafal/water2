@@ -1,7 +1,4 @@
-use std::{
-    collections::{BTreeSet, VecDeque},
-    time::Instant,
-};
+use std::collections::{BTreeSet, VecDeque};
 
 use crate::{
     blobs::{Blob, Blobs},
@@ -68,6 +65,8 @@ impl<'a> BlobDetector<'a> {
 
     #[cfg(test)]
     pub(crate) fn detect_slow(&self) -> Blobs {
+        use std::time::Instant;
+
         let start = Instant::now();
         let mut detected: Blobs = Default::default();
 
@@ -142,15 +141,14 @@ impl<'a> BlobDetector<'a> {
     fn update_touching(&mut self, x: usize, y: usize, touching: &mut BTreeSet<(usize, usize)>) {
         self.done.insert((x, y));
 
-        if !self.done.contains(&(x, y - 1)) && self.board.tiles().at(x, y - 1) == Some(&Tile::Water)
-        {
-            touching.insert((x, y - 1));
-        }
-
-        if !self.done.contains(&(x, y + 1)) && self.board.tiles().at(x, y + 1) == Some(&Tile::Water)
-        {
-            touching.insert((x, y + 1));
-        }
+        [y - 1, y + 1]
+            .into_iter()
+            .filter(|y| {
+                !self.done.contains(&(x, *y)) && self.board.tiles().at(x, *y) == Some(&Tile::Water)
+            })
+            .for_each(|y| {
+                touching.insert((x, y));
+            });
     }
 
     fn find_first_water_point(&mut self) -> Option<(usize, usize)> {
@@ -168,7 +166,6 @@ impl<'a> BlobDetector<'a> {
 
     // TODO: no mut, hold the `done` as function local variable
     pub(crate) fn detect_quick(&mut self) -> Blobs {
-        let start = Instant::now();
         let mut blobs: Blobs = Default::default();
         loop {
             let first_point = self.find_first_water_point();
@@ -204,10 +201,6 @@ impl<'a> BlobDetector<'a> {
 
             blobs.insert(blobs.len(), blob);
         }
-
-        let _duration = start.elapsed();
-
-        blobs
     }
 }
 
