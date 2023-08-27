@@ -105,25 +105,20 @@ impl<'a> BlobDetector<'a> {
         let mut start = None;
         let mut touching = Vec::new();
 
-        // TODO: This loop is probably not needed most of the time, since sx and sy point to the water
-        for x in sx..self.board.width() {
-            if self.board.tiles().at(x, sy) == Some(&Tile::Water) {
-                start = Some(x);
-                self.done.insert((x, sy));
+        if self.board.tiles().at(sx, sy) == Some(&Tile::Water) {
+            start = Some(sx);
+            self.done.insert((sx, sy));
 
-                if self.board.tiles().at(x, sy - 1) == Some(&Tile::Water)
-                    && !self.done.contains(&(x, sy - 1))
-                {
-                    touching.push((x, sy - 1));
-                }
+            if self.board.tiles().at(sx, sy - 1) == Some(&Tile::Water)
+                && !self.done.contains(&(sx, sy - 1))
+            {
+                touching.push((sx, sy - 1));
+            }
 
-                if self.board.tiles().at(x, sy + 1) == Some(&Tile::Water)
-                    && !self.done.contains(&(x, sy + 1))
-                {
-                    touching.push((x, sy + 1));
-                }
-
-                break;
+            if self.board.tiles().at(sx, sy + 1) == Some(&Tile::Water)
+                && !self.done.contains(&(sx, sy + 1))
+            {
+                touching.push((sx, sy + 1));
             }
         }
 
