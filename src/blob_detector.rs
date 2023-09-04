@@ -172,12 +172,12 @@ impl<'a> BlobDetector<'a> {
             let mut to_be_analyzed: VecDeque<_> = Default::default();
             let mut blob: Blob = Default::default();
             if let Some((x, y)) = first_point {
-                self.find_line(x, y).map(|detected_line| {
+                if let Some(detected_line) = self.find_line(x, y) {
                     blob.points_mut().extend(
                         (detected_line.start..=detected_line.end).map(|b| Point::new(b, y)),
                     );
                     to_be_analyzed.extend(detected_line.touching);
-                });
+                }
             } else {
                 return blobs;
             }
@@ -188,12 +188,13 @@ impl<'a> BlobDetector<'a> {
                     if self.done.contains(&(x, y)) {
                         continue;
                     }
-                    self.find_line(x, y).map(|detected_line| {
+
+                    if let Some(detected_line) = self.find_line(x, y) {
                         blob.points_mut().extend(
                             (detected_line.start..=detected_line.end).map(|b| Point::new(b, y)),
                         );
                         to_be_analyzed.extend(detected_line.touching);
-                    });
+                    }
                 } else {
                     break;
                 }
