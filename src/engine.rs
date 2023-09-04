@@ -149,8 +149,6 @@ impl Engine {
         // Split and merge blobs as they move.
         let mut blob_detector = BlobDetector::new(&self.board);
         self.blobs = blob_detector.detect_quick();
-
-        //        Engine { board, blobs, rng }
     }
 }
 

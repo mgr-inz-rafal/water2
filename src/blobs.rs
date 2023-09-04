@@ -35,6 +35,12 @@ impl<'a> IntoIterator for &'a Blob {
     }
 }
 
+// TODO: I believe this affects the performance and there could be a faster
+// way to iterate the blob points in the order required for proper simulation.
+// This could probably be written in a smarter way, and maybe I can even
+// ensure that points come in the required order directly from blob detector,
+// which will make this iterator superfluous because the iteration will get trivial.
+// Anyway: measure first :)
 #[derive(Debug)]
 pub(crate) struct PointIterator<'a> {
     points: HashMap<usize, BTreeSet<&'a Point>>,
@@ -134,10 +140,6 @@ mod tests {
             ]);
 
             let actual = blob.into_iter().cloned().collect::<Vec<_>>();
-
-            dbg!(&actual);
-            dbg!(&not_expected);
-
             if actual != not_expected {
                 return;
             }

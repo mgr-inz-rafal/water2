@@ -15,7 +15,7 @@ use crate::{
 pub(crate) struct GameConfig {
     pub(crate) console_preview: bool,
 
-    // TODO: Support performance after there is an option to load board from file,
+    // TODO: Support performance meters after there is an option to load board from file,
     // so we get repetitive results.
     pub(crate) _perf_tick: bool,
     pub(crate) _perf_blob_detect: bool,
