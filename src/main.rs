@@ -8,6 +8,8 @@ mod ggez_painter;
 mod point;
 mod tiles;
 
+use clap::Parser;
+
 use blob_detector::BlobDetector;
 use board::Board;
 
@@ -28,10 +30,23 @@ const PIXEL_SIZE: usize = 4;
 const PLAYFIELD_WIDTH: usize = WINDOW_WIDTH / PIXEL_SIZE;
 const PLAYFIELD_HEIGHT: usize = WINDOW_HEIGHT / PIXEL_SIZE;
 
-fn main() {
-    let (ctx, event_loop) = GgezPainter::init(WINDOW_WIDTH, WINDOW_HEIGHT, VERSION, TITLE, AUTHOR);
+#[derive(Parser, Debug)]
+struct Args {
+    /// Picture to laod.
+    #[arg(short, long)]
+    picture: Option<String>,
+}
 
-    let board = Board::new(PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT, PIXEL_SIZE);
+fn main() {
+    let args = Args::parse();
+
+    let board = match args.picture {
+        Some(path) => Board::from_image(path),
+        None => Board::new(PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT, PIXEL_SIZE),
+    };
+
+    let (ctx, event_loop) =
+        GgezPainter::init(board.width(), board.height(), VERSION, TITLE, AUTHOR);
 
     let mut blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect_quick();

@@ -57,7 +57,7 @@ impl Board {
     }
 
     // This will eventually be used when we add an option to load the board from bitmap.
-    pub(crate) fn _from_image(path: impl AsRef<Path>) -> Self {
+    pub(crate) fn from_image(path: impl AsRef<Path>) -> Self {
         let image = image::open(path).unwrap().to_rgb8();
         let pixels = image.enumerate_pixels();
 
