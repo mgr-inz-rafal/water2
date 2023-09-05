@@ -5,7 +5,7 @@ use ggez::{
 };
 
 use crate::{
-    console_painter::ConsolePainter,
+    console_painter::{ConsolePainter, HasBoard},
     engine::Engine,
     ggez_painter::GgezPainter,
     tiles::{Tile, TileUpdateOperation, TileUpdateRule},
@@ -21,16 +21,30 @@ pub(crate) struct GameConfig {
     pub(crate) _perf_blob_detect: bool,
 }
 
+pub struct Renderer {
+    pub pixel_size: usize,
+    pub left_button_down: bool,
+    pub right_button_down: bool,
+    pub middle_button_down: bool,
+    tile_to_draw: Tile,
+}
+
+impl Default for Renderer {
+    fn default() -> Self {
+        Self {
+            pixel_size: 4,
+            left_button_down: false,
+            right_button_down: false,
+            middle_button_down: false,
+            tile_to_draw: Tile::Rock,
+        }
+    }
+}
+
 pub(crate) struct Game {
     engine: Engine,
     cfg: GameConfig,
-
-    // Drawing
-    // TODO: Extract to dedicated struct
-    left_button_down: bool,
-    right_button_down: bool,
-    middle_button_down: bool,
-    tile_to_draw: Tile,
+    renderer: Renderer,
 }
 
 impl Game {
@@ -38,11 +52,15 @@ impl Game {
         Self {
             engine,
             cfg,
-            left_button_down: false,
-            right_button_down: false,
-            middle_button_down: false,
-            tile_to_draw: Tile::Rock,
+            renderer: Default::default(),
         }
+    }
+
+    pub(crate) fn windows_size(&self) -> (usize, usize) {
+        (
+            self.renderer.pixel_size * self.engine.board().width(),
+            self.renderer.pixel_size * self.engine.board().height(),
+        )
     }
 
     fn update_tile(&mut self, x: usize, y: usize, op: &TileUpdateOperation) {
@@ -51,7 +69,7 @@ impl Game {
         let board = engine.board_mut();
         let height = board.height();
         let width = board.width();
-        let pixel_size = board.pixel_size();
+        let pixel_size = self.renderer.pixel_size;
         let tiles = board.tiles_mut();
         for xx in x - 10..x + 10 {
             for yy in y - 10..y + 10 {
@@ -82,7 +100,11 @@ impl Game {
     }
 
     fn draw_tile(&mut self, x: usize, y: usize) {
-        self.update_tile(x, y, &TileUpdateOperation::Paint(self.tile_to_draw));
+        self.update_tile(
+            x,
+            y,
+            &TileUpdateOperation::Paint(self.renderer.tile_to_draw),
+        );
     }
 }
 
@@ -93,7 +115,7 @@ impl EventHandler for Game {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
-        GgezPainter::paint(&self.engine, ctx).unwrap();
+        GgezPainter::paint(&self.engine, &self.renderer, ctx).unwrap();
         if self.cfg.console_preview {
             ConsolePainter::paint(&self.engine);
             println!("Press Enter for next frame");
@@ -112,15 +134,15 @@ impl EventHandler for Game {
     ) -> Result<(), ggez::GameError> {
         match button {
             event::MouseButton::Left => {
-                self.left_button_down = true;
+                self.renderer.left_button_down = true;
                 self.draw_tile(x as usize, y as usize);
             }
             event::MouseButton::Right => {
-                self.right_button_down = true;
+                self.renderer.right_button_down = true;
                 self.erase_tile(x as usize, y as usize);
             }
             event::MouseButton::Middle => {
-                self.middle_button_down = true;
+                self.renderer.middle_button_down = true;
                 self.purge_tile(x as usize, y as usize);
             }
             event::MouseButton::Other(_) => (),
@@ -136,9 +158,9 @@ impl EventHandler for Game {
         _y: f32,
     ) -> Result<(), ggez::GameError> {
         match button {
-            event::MouseButton::Left => self.left_button_down = false,
-            event::MouseButton::Right => self.right_button_down = false,
-            event::MouseButton::Middle => self.middle_button_down = false,
+            event::MouseButton::Left => self.renderer.left_button_down = false,
+            event::MouseButton::Right => self.renderer.right_button_down = false,
+            event::MouseButton::Middle => self.renderer.middle_button_down = false,
             event::MouseButton::Other(_) => (),
         }
         Ok(())
@@ -153,9 +175,9 @@ impl EventHandler for Game {
         _dy: f32,
     ) -> Result<(), ggez::GameError> {
         match (
-            self.left_button_down,
-            self.middle_button_down,
-            self.right_button_down,
+            self.renderer.left_button_down,
+            self.renderer.middle_button_down,
+            self.renderer.right_button_down,
         ) {
             (true, false, false) => self.draw_tile(x as usize, y as usize),
             (false, true, false) => self.purge_tile(x as usize, y as usize),
@@ -172,8 +194,8 @@ impl EventHandler for Game {
         input: ggez::input::keyboard::KeyInput,
     ) -> Result<(), ggez::GameError> {
         match input.keycode {
-            Some(KeyCode::Key1) => self.tile_to_draw = Tile::Rock,
-            Some(KeyCode::Key2) => self.tile_to_draw = Tile::Water,
+            Some(KeyCode::Key1) => self.renderer.tile_to_draw = Tile::Rock,
+            Some(KeyCode::Key2) => self.renderer.tile_to_draw = Tile::Water,
             _ => (),
         }
         Ok(())

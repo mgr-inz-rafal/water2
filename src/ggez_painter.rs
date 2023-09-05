@@ -7,7 +7,7 @@ use ggez::{
     Context, ContextBuilder,
 };
 
-use crate::{console_painter::Paintable, tiles::Tile};
+use crate::{console_painter::Paintable, game::Renderer, tiles::Tile};
 
 #[derive(Error, Debug)]
 pub enum Error {
@@ -20,9 +20,13 @@ pub enum Error {
 pub(crate) struct GgezPainter {}
 
 impl GgezPainter {
-    pub(crate) fn paint<T: Paintable>(playfield: &T, ctx: &mut Context) -> Result<(), Error> {
+    pub(crate) fn paint<T: Paintable>(
+        playfield: &T,
+        renderer: &Renderer,
+        ctx: &mut Context,
+    ) -> Result<(), Error> {
         let mut canvas = graphics::Canvas::from_frame(ctx, Color::WHITE);
-        let pixel_size = playfield.board().pixel_size() as f32;
+        let pixel_size = renderer.pixel_size as f32;
 
         let mut mesh_builder = MeshBuilder::default();
         for y in 0..playfield.board().height() {

@@ -6,13 +6,11 @@ use crate::tiles::{Tile, Tiles};
 pub(crate) struct Board {
     width: usize,
     height: usize,
-    // TODO: This doesn't belong here - it's a renderer thing, not board
-    pixel_size: usize,
     tiles: Tiles,
 }
 
 impl Board {
-    pub(crate) fn new(width: usize, height: usize, pixel_size: usize) -> Self {
+    pub(crate) fn new(width: usize, height: usize) -> Self {
         let mut tiles = Tiles::empty(width, height);
         for x in 0..width {
             tiles.set_at(x, 0, Tile::Rock);
@@ -27,7 +25,6 @@ impl Board {
             width,
             height,
             tiles,
-            pixel_size,
         }
     }
 
@@ -65,7 +62,6 @@ impl Board {
             width: image.width() as usize,
             height: image.height() as usize,
             tiles: Tiles::empty(image.width() as usize, image.height() as usize),
-            pixel_size: 1,
         };
 
         for (x, y, rgb) in pixels {
@@ -88,7 +84,6 @@ impl Board {
             width,
             height,
             tiles: Tiles::from_str(tiles, width, height),
-            pixel_size: 1,
         }
     }
 
@@ -117,11 +112,6 @@ impl Board {
             width: WIDTH,
             height: HEIGHT,
             tiles: Tiles::from_str(TEST_1, WIDTH, HEIGHT),
-            pixel_size: 1,
         }
-    }
-
-    pub(crate) fn pixel_size(&self) -> usize {
-        self.pixel_size
     }
 }

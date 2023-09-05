@@ -42,18 +42,15 @@ fn main() {
 
     let board = match args.picture {
         Some(path) => Board::from_image(path),
-        None => Board::new(PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT, PIXEL_SIZE),
+        None => Board::new(PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT),
     };
-
-    let (ctx, event_loop) =
-        GgezPainter::init(board.width(), board.height(), VERSION, TITLE, AUTHOR);
 
     let mut blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect_quick();
 
     let engine = Engine::new(board, blobs);
 
-    let whatever = Game::new(
+    let game = Game::new(
         engine,
         GameConfig {
             //console_preview: true,
@@ -61,5 +58,8 @@ fn main() {
         },
     );
 
-    event::run(ctx, event_loop, whatever);
+    let (window_width, window_height) = game.windows_size();
+    let (ctx, event_loop) = GgezPainter::init(window_width, window_height, VERSION, TITLE, AUTHOR);
+
+    event::run(ctx, event_loop, game);
 }
