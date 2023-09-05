@@ -101,11 +101,11 @@ impl Engine {
 
             for (_, blob) in new_blobs.iter() {
                 // No single droplet from this blob moved down, try move up.
-                let top_row = blob.points().first().unwrap().y();
+                let Some(top_row) = blob.points().first() else { continue };
                 let top_points: Vec<_> = blob
                     .points()
                     .iter()
-                    .filter(|pt| pt.y() == top_row)
+                    .filter(|pt| pt.y() == top_row.y())
                     .collect();
 
                 let destination_candidates: Vec<_> = blob
@@ -114,7 +114,7 @@ impl Engine {
                     .rev()
                     .filter(|pt| {
                         if let Some(pt_up) = self.board.tiles().at(pt.x(), pt.y() - 1) {
-                            pt_up.is_air() && pt.y() != top_row
+                            pt_up.is_air() && pt.y() != top_row.y()
                         } else {
                             false
                         }
