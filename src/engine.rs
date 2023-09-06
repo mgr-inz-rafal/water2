@@ -107,6 +107,9 @@ impl Engine {
                     .iter()
                     .filter(|pt| pt.y() == top_row.y())
                     .collect();
+                if top_points.is_empty() {
+                    continue;
+                }
 
                 let destination_candidates: Vec<_> = blob
                     .points()
@@ -129,7 +132,7 @@ impl Engine {
                         .filter(|pt| pt.y() == lowest_row)
                         .collect();
 
-                    if !top_points.is_empty() && !lowest_candidates.is_empty() {
+                    if !lowest_candidates.is_empty() {
                         let top_point = top_points.choose(&mut self.rng).unwrap();
                         let destination_point = lowest_candidates.choose(&mut self.rng).unwrap();
 
