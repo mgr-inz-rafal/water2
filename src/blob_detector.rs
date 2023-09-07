@@ -154,7 +154,7 @@ impl<'a> BlobDetector<'a> {
     fn find_first_water_point(&mut self) -> Option<(usize, usize)> {
         for y in 0..self.board.height() {
             for x in 0..self.board.width() {
-                if !self.done.contains(&(x, y)) && self.board.tiles().at(x, y) == Some(&Tile::Water)
+                if self.board.tiles().at(x, y) == Some(&Tile::Water) && !self.done.contains(&(x, y))
                 {
                     self.done.insert((x, y));
                     return Some((x, y));

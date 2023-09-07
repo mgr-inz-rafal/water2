@@ -101,7 +101,9 @@ impl Engine {
 
             for (_, blob) in new_blobs.iter() {
                 // No single droplet from this blob moved down, try move up.
-                let Some(top_row) = blob.points().first() else { continue };
+                let Some(top_row) = blob.points().first() else {
+                    continue;
+                };
                 let top_points: Vec<_> = blob
                     .points()
                     .iter()
