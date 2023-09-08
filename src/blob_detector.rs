@@ -151,15 +151,20 @@ impl<'a> BlobDetector<'a> {
             });
     }
 
-    fn find_first_water_point(&mut self) -> Option<(usize, usize)> {
-        for y in 0..self.board.height() {
-            for x in 0..self.board.width() {
+    fn find_first_water_point(
+        &mut self,
+        start_at: Option<(usize, usize)>,
+    ) -> Option<(usize, usize)> {
+        let (mut start_x, start_y) = start_at.unwrap_or_default();
+        for y in start_y..self.board.height() {
+            for x in start_x..self.board.width() {
                 if self.board.tiles().at(x, y) == Some(&Tile::Water) && !self.done.contains(&(x, y))
                 {
                     self.done.insert((x, y));
                     return Some((x, y));
                 }
             }
+            start_x = 0;
         }
         None
     }
@@ -167,8 +172,13 @@ impl<'a> BlobDetector<'a> {
     // TODO: no mut, hold the `done` as function local variable
     pub(crate) fn detect_quick(&mut self) -> Blobs {
         let mut blobs: Blobs = Default::default();
+        let mut recent_first_point = None::<(usize, usize)>;
         loop {
-            let first_point = self.find_first_water_point();
+            let first_point = self.find_first_water_point(recent_first_point);
+            if first_point.is_none() {
+                return blobs;
+            }
+            recent_first_point = first_point;
             let mut to_be_analyzed: VecDeque<_> = Default::default();
             let mut blob: Blob = Default::default();
             if let Some((x, y)) = first_point {
@@ -178,8 +188,6 @@ impl<'a> BlobDetector<'a> {
                     );
                     to_be_analyzed.extend(detected_line.touching);
                 }
-            } else {
-                return blobs;
             }
 
             loop {

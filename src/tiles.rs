@@ -60,8 +60,7 @@ pub(crate) struct Tiles {
 }
 
 impl Tiles {
-    #[cfg(test)]
-    pub(crate) fn from_str(s: &str, width: usize, height: usize) -> Self {
+    pub(crate) fn _from_str(s: &str, width: usize, height: usize) -> Self {
         Self {
             width,
             height,

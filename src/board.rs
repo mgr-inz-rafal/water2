@@ -87,31 +87,30 @@ impl Board {
         }
     }
 
-    #[cfg(test)]
     pub(crate) fn _new_test_1() -> Self {
         const WIDTH: usize = 10;
         const HEIGHT: usize = 16;
         const TEST_1: &str = "##########\
-                              #oooo..#.#\
-                              #oooo#o#.#\
-                              #ooo.#ooo#\
-                              ##########\
-                              #oooooooo#\
-                              #oooooooo#\
-                              #oooooooo#\
-                              #oo#######\
-                              #oo#.###.#\
-                              #oo#.#...#\
-                              #oo#.#.#.#\
-                              #oo#...#.#\
-                              #..#####.#\
+                              #........#\
+                              #....oo..#\
+                              #....oo..#\
+                              #.oo.....#\
+                              #.oo.....#\
+                              #........#\
+                              #........#\
+                              #........#\
+                              #........#\
+                              #........#\
+                              #........#\
+                              #........#\
+                              #........#\
                               #........#\
                               ##########";
 
         Self {
             width: WIDTH,
             height: HEIGHT,
-            tiles: Tiles::from_str(TEST_1, WIDTH, HEIGHT),
+            tiles: Tiles::_from_str(TEST_1, WIDTH, HEIGHT),
         }
     }
 }

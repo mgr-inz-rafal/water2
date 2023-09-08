@@ -48,6 +48,8 @@ fn main() {
         None => Board::new(PLAYFIELD_WIDTH, PLAYFIELD_HEIGHT),
     };
 
+    //let board = Board::_new_test_1();
+
     let mut blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect_quick();
 
