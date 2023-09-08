@@ -19,7 +19,7 @@ pub(crate) struct Engine {
     blobs: Blobs,
     rng: ThreadRng,
     perf_check: Option<usize>,
-    perf_data: Vec<Duration>,
+    perf_data: Vec<(Duration, Duration)>,
 }
 
 impl Engine {
@@ -153,26 +153,40 @@ impl Engine {
                 }
             }
         }
+        let duration_move = start.elapsed();
 
+        let start = Instant::now();
         // TODO: It's super inefficient to re-detect blobs each tick.
         // Split and merge blobs as they move.
         let mut blob_detector = BlobDetector::new(&self.board);
         self.blobs = blob_detector.detect_quick();
+        let duration_detector = start.elapsed();
 
-        let duration = start.elapsed();
         if let Some(samples) = self.perf_check.as_mut() {
             *samples -= 1;
-            self.perf_data.push(duration);
+            self.perf_data.push((duration_move, duration_detector));
             if *samples == 0 {
                 println!("{:?}", self.perf_data);
+                let (moves, detects): (Vec<_>, Vec<_>) = self.perf_data.clone().into_iter().unzip();
                 println!(
-                    "avg={}",
-                    self.perf_data
-                        .iter()
-                        .map(|duration| duration.as_millis())
-                        .sum::<u128>()
-                        / self.perf_data.len() as u128
+                    "avg_moves={:?} avg_detects={:?}",
+                    Duration::from_millis(
+                        (moves
+                            .iter()
+                            .map(|duration| duration.as_millis() as f64)
+                            .sum::<f64>()
+                            / self.perf_data.len() as f64) as u64
+                    ),
+                    Duration::from_millis(
+                        (detects
+                            .iter()
+                            .map(|duration| duration.as_millis() as f64)
+                            .sum::<f64>()
+                            / self.perf_data.len() as f64) as u64
+                    )
                 );
+
+                //println!("avg={}", );
                 return true;
             }
         }
