@@ -109,8 +109,10 @@ impl Game {
 }
 
 impl EventHandler for Game {
-    fn update(&mut self, _ctx: &mut Context) -> GameResult {
-        self.engine.tick();
+    fn update(&mut self, ctx: &mut Context) -> GameResult {
+        if self.engine.tick() {
+            ctx.request_quit();
+        }
         Ok(())
     }
 

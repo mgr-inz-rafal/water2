@@ -35,6 +35,9 @@ struct Args {
     /// Picture to laod.
     #[arg(short, long)]
     picture: Option<String>,
+    /// Enables performance check. Engine will run first X frames and provide timing data on stdout.
+    #[arg(short = 'c', long)]
+    perf_check: Option<usize>,
 }
 
 fn main() {
@@ -48,7 +51,7 @@ fn main() {
     let mut blob_detector = BlobDetector::new(&board);
     let blobs = blob_detector.detect_quick();
 
-    let engine = Engine::new(board, blobs);
+    let engine = Engine::new(board, blobs, args.perf_check);
 
     let game = Game::new(
         engine,

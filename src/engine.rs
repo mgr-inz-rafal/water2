@@ -1,6 +1,6 @@
 use std::{
     collections::{BTreeMap, BTreeSet},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 use rand::{rngs::ThreadRng, seq::SliceRandom, Rng};
@@ -18,14 +18,18 @@ pub(crate) struct Engine {
     board: Board,
     blobs: Blobs,
     rng: ThreadRng,
+    perf_check: Option<usize>,
+    perf_data: Vec<Duration>,
 }
 
 impl Engine {
-    pub(crate) fn new(board: Board, blobs: Blobs) -> Self {
+    pub(crate) fn new(board: Board, blobs: Blobs, perf_check: Option<usize>) -> Self {
         Self {
             board,
             blobs,
             rng: rand::thread_rng(),
+            perf_check,
+            perf_data: perf_check.map_or(Default::default(), Vec::with_capacity),
         }
     }
 
@@ -41,11 +45,12 @@ impl Engine {
         &self.blobs
     }
 
-    pub(crate) fn tick(&mut self) {
+    pub(crate) fn tick(&mut self) -> bool {
+        let start = Instant::now();
+
         // TODO: Quite ugly and hacky, please rewrite.
         let mut new_blobs: BTreeMap<usize, Blob> = Default::default();
 
-        let start = Instant::now();
         for (index, blob) in &self.blobs {
             let mut new_points: BTreeSet<_> = Default::default();
 
@@ -148,12 +153,30 @@ impl Engine {
                 }
             }
         }
-        let _duration = start.elapsed();
 
         // TODO: It's super inefficient to re-detect blobs each tick.
         // Split and merge blobs as they move.
         let mut blob_detector = BlobDetector::new(&self.board);
         self.blobs = blob_detector.detect_quick();
+
+        let duration = start.elapsed();
+        if let Some(samples) = self.perf_check.as_mut() {
+            *samples -= 1;
+            self.perf_data.push(duration);
+            if *samples == 0 {
+                println!("{:?}", self.perf_data);
+                println!(
+                    "avg={}",
+                    self.perf_data
+                        .iter()
+                        .map(|duration| duration.as_millis())
+                        .sum::<u128>()
+                        / self.perf_data.len() as u128
+                );
+                return true;
+            }
+        }
+        false
     }
 }
 
