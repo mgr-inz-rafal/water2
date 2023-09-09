@@ -144,7 +144,7 @@ impl<'a> BlobDetector<'a> {
         [y - 1, y + 1]
             .into_iter()
             .filter(|y| {
-                !self.done.contains(&(x, *y)) && self.board.tiles().at(x, *y) == Some(&Tile::Water)
+                self.board.tiles().at(x, *y) == Some(&Tile::Water) && !self.done.contains(&(x, *y))
             })
             .for_each(|y| {
                 touching.insert((x, y));
