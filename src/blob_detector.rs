@@ -58,8 +58,7 @@ impl<'a> BlobDetector<'a> {
     fn already_detected(&self, x: usize, y: usize, detected: &Blobs) -> bool {
         detected
             .values()
-            .map(|blob| blob.points())
-            .flatten()
+            .flat_map(|blob| blob.points())
             .any(|pt| pt == &Point::new(x, y))
     }
 
@@ -257,7 +256,7 @@ mod tests {
             })
             .collect();
         result.chunks(12).for_each(|chunk| {
-            chunk.into_iter().for_each(|c| print!("{c}"));
+            chunk.iter().for_each(|c| print!("{c}"));
             println!();
         });
 

@@ -83,7 +83,7 @@ impl Board {
         Self {
             width,
             height,
-            tiles: Tiles::from_str(tiles, width, height),
+            tiles: Tiles::_from_str(tiles, width, height),
         }
     }
 

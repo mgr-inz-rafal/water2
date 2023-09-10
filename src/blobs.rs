@@ -145,6 +145,6 @@ mod tests {
             }
         }
 
-        assert!(false);
+        panic!("more than {ALLOWED_FALSE_POSITIVES} false positives :(");
     }
 }
