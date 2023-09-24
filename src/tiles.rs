@@ -56,7 +56,7 @@ impl TileUpdateRule {
 pub(crate) struct Tiles {
     width: usize,
     height: usize,
-    tiles: Vec<Vec<Tile>>,
+    tiles: Vec<Tile>,
 }
 
 impl Tiles {
@@ -66,39 +66,32 @@ impl Tiles {
             height,
             tiles: s
                 .chars()
-                .collect::<Vec<_>>()
-                .chunks(width)
-                .map(|chunk| {
-                    chunk
-                        .iter()
-                        .map(|c| match c {
-                            '#' => Tile::Rock,
-                            '.' => Tile::Air,
-                            'o' => Tile::Water,
-                            _ => panic!("unknown tile: {c}"),
-                        })
-                        .collect()
+                .map(|c| match c {
+                    '#' => Tile::Rock,
+                    '.' => Tile::Air,
+                    'o' => Tile::Water,
+                    _ => panic!("unknown tile: {c}"),
                 })
                 .collect(),
         }
     }
 
     pub(crate) fn empty(width: usize, height: usize) -> Self {
-        let row = vec![Tile::Air; width];
         Self {
             width,
             height,
-            tiles: vec![row; height],
+            tiles: vec![Tile::Air; height * width],
         }
     }
 
     pub(crate) fn at(&self, x: usize, y: usize) -> Option<&Tile> {
-        self.within_limits(x, y).then(|| &self.tiles[y][x])
+        self.within_limits(x, y)
+            .then(|| &self.tiles[y * self.width + x])
     }
 
     pub(crate) fn set_at(&mut self, x: usize, y: usize, tile: Tile) {
         if self.within_limits(x, y) {
-            *self.tiles.get_mut(y).unwrap().get_mut(x).unwrap() = tile;
+            *self.tiles.get_mut(y * self.width + x).unwrap() = tile;
         }
     }
 
